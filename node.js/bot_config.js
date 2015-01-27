@@ -16,8 +16,20 @@ var admins = [
 
 var servers = [];
 
+servers[0] = {
+	name: "Starfox64's DEV Server #1",
+	ip: "127.0.0.1",
+	port: 25101
+};
+
 servers[1] = {
-	name: "Starfox64's DEV Server",
+	name: "Starfox64's DEV Server #2",
+	ip: "127.0.0.1",
+	port: 25101
+};
+
+servers[2] = {
+	name: "Starfox64's DEV Server #3",
 	ip: "127.0.0.1",
 	port: 25101
 };

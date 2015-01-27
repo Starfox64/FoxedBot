@@ -25,11 +25,21 @@ addCommand("who", false, function (steamID, name, args) {
 	sendMessage(steamID, text);
 })
 
+addCommand("showargs", false, function (steamID, name, args) {
+	var text = args.length + " arguments:";
+
+	for (var i in args) {
+		text = text + "\n" + args[i];
+	}
+
+	sendMessage(steamID, text);
+})
+
 addCommand("select", false, function (steamID, name, args) {
 	var selectWork = [];
 
 	for (var i in args) {
-		if (args[0] == "*") {
+		if (args[i] == "*") {
 			for (var k in servers) {
 				selectWork.push(k);
 			}
@@ -38,7 +48,7 @@ addCommand("select", false, function (steamID, name, args) {
 
 		var id = Number(args[i]);
 
-		if (!isNaN(args[i]) && id > 0 && id === parseInt(id, 10) && servers[id]) {
+		if (!isNaN(args[i]) && id >= 0 && servers[id]) {
 			selectWork.push(id);
 		}
 	}
@@ -50,7 +60,10 @@ addCommand("select", false, function (steamID, name, args) {
 			var text = "You have selected server ";
 
 			for (var i in selectWork) {
-				text = text + selectWork[i] + ", ";
+				text = text + selectWork[i];
+				if (Number(i) + 1 != selectWork.length) {
+					text = text + ", ";
+				}
 			}
 
 			text = text + ".";

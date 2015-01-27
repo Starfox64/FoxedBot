@@ -1,3 +1,3 @@
 addEvent("OnChat", function (serverID, data) {
-	// body...
+	console.log("[" + serverID + "] " + data.name + ": " + data.text);
 })

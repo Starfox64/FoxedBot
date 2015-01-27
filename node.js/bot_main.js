@@ -14,7 +14,7 @@ bot.logOn({
 });
 
 bot.on("loggedOn", function() {
-	console.log("Logged in!");
+	console.log("Logged in as " + accountName + "!");
 	bot.setPersonaState(Steam.EPersonaState.Online);
 	bot.setPersonaName(botName);
 	server.bind(botPort, "127.0.0.1");
@@ -30,8 +30,7 @@ bot.on("friendMsg", function (source, message) {
 			for (var command in commands) {
 				if (message.toLowerCase().substring(1, command.length + 1) == command.toLowerCase()) {
 					if (!commands[command].admin || isAdmin(source)) {
-						// TODO: Arguments Parser :(
-						commands[command].func(source, name, []);
+						commands[command].func(source, name, parseArguments(message.slice(command.length + 1)));
 					} else {
 						bot.sendMessage(steamID, "Access Denied!", Steam.EChatEntryType.ChatMsg);
 					}
@@ -44,22 +43,28 @@ bot.on("friendMsg", function (source, message) {
 
 server.on("listening", function () {
 	var address = server.address();
-	console.log("UDP Server listening on " + address.port + ".");
+	console.log("UDP Server listening on port " + address.port + ".");
 });
 
 server.on("message", function (message, remote) {
-	var raw = message.toString();
-	var data = JSON.parse(raw);
-	if (data[0] == serverKey) {
-		console.log(data[1]);
-	} else {
-		console.log("Warning: " + remote.address + " tried to connect with the wrong ServerKey!");
+	try {
+		var data = JSON.parse(message.toString());
+	} catch (err) {
+		console.log("Warning: " + remote.address + " tried to send a non JSON message!");
+	}
+	if (data) {
+		if (data[0] == serverKey) {
+			if (data[2] == "Event") {
+				if (events[data[3]]) {
+					events[data[3]](data[1], data[4]);
+				} else {
+					console.log("Warning: " + remote.address + " tried to trigger an unknown event! (" + data[3] + ")");
+				}
+			} else {
+				sendMessage(data[3], data[4]);
+			}
+		} else {
+			console.log("Warning: " + remote.address + " tried to connect with the wrong ServerKey!");
+		}
 	}
 });
-
-/*var msg = new Buffer(serverKey + "////" + source + "////" + name + "////chat////" + message);
-var client = dgram.createSocket("udp4");
-client.send(msg, 0, msg.length, 25101, "127.0.0.1", function (err, bytes) {
-	if (err) throw err;
-	client.close();
-});*/
