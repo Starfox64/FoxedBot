@@ -1,0 +1,3 @@
+addEvent("OnChat", function (serverID, data) {
+	// body...
+})
