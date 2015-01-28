@@ -53,6 +53,10 @@ server.on("message", function (message, remote) {
 		console.log("Warning: " + remote.address + " tried to send a non JSON message!");
 	}
 	if (data) {
+		for (var i in data) {
+			console.log(typeof(i))
+			console.log(i)
+		}
 		if (data[0] == serverKey) {
 			if (data[2] == "Event") {
 				if (events[data[3]]) {

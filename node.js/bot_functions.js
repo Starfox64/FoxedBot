@@ -68,7 +68,12 @@ function parseArguments (toParse) {
 }
 
 function sendToServer (serverID, callback, data) {
-	var buff = new Buffer(JSON.stringify(data));
+	var toSend = [
+		serverKey,
+		callback,
+		data
+	];
+	var buff = new Buffer(JSON.stringify(toSend));
 	var client = dgram.createSocket("udp4");
 
 	client.send(buff, 0, buff.length, servers[serverID].port, servers[serverID].ip, function (err, bytes) {

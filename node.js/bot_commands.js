@@ -76,3 +76,24 @@ addCommand("select", false, function (steamID, name, args) {
 		sendMessage(steamID, "The server(s) you have selected couldn't be found.");
 	}
 })
+
+addCommand("chat", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var text = "";
+
+		for (var i in args) {
+			text = text + " " + args[i];
+		}
+		if (text != "" || text != " ") {
+			var data = {
+				name: name,
+				message: text
+			}
+			for (var i in selected[steamID]) {
+				sendToServer(selected[steamID][i], "chat", data);
+			}
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+})

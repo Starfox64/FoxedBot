@@ -12,16 +12,15 @@ FoxedBot.sock:SetCallbackReceiveFrom(function( sockObj, packet, ip, port )
 	local msg = packet:ReadStringAll()
 
 	if type(msg) == "string" then
-		local args = string.Explode("////", msg)
+		local args = util.JSONToTable(msg)
+
 		local serverKey = args[1] or "unknown"
-		local steamID = args[2] or "unknown"
-		local name = args[3] or "unknown"
-		local callback = args[4] or "unknown"
-		local data = args[5] or "unknown"
+		local callback = args[2] or "unknown"
+		local data = args[3] or {}
 
 		if serverKey == FoxedBot.ServerKey then
 			if FoxedBot.callbacks[callback] then
-				FoxedBot.callbacks[callback](steamID, name, data)
+				FoxedBot.callbacks[callback](data)
 			else
 				MsgC(Color(200, 25, 25), "[FoxedBot] Attempted to call an unknown callback! ("..callback..")\n")
 			end
@@ -29,6 +28,7 @@ FoxedBot.sock:SetCallbackReceiveFrom(function( sockObj, packet, ip, port )
 			MsgC(Color(200, 25, 25), "[FoxedBot] "..ip.." attempted to send a packet to the server with the wrong password.\n")
 		end
 	end
+
 	FoxedBot.sock:ReceiveFrom()
 end)
 
@@ -42,7 +42,7 @@ function FoxedBot.addCallback( name, func )
 	if type(name) != "string" then
 		error("bad argument #1 to 'addCallback' (string expected, got "..type(name)..")")
 	elseif type(func) != "function" then
-		error("bad argument #2 to 'addCallback' (function expected, got "..type(name)..")")
+		error("bad argument #2 to 'addCallback' (function expected, got "..type(func)..")")
 	end
 
 	FoxedBot.callbacks[name] = func
@@ -53,32 +53,74 @@ end
 ]]--
 function FoxedBot.removeCallback( name )
 	if type(name) != "string" then
-		error("bad argument #1 to 'addCallback' (string expected, got "..type(name)..")")
+		error("bad argument #1 to 'removeCallback' (string expected, got "..type(name)..")")
 	end
 
 	FoxedBot.callbacks[name] = nil
 end
 
 --[[
-	Returns true if the state of the socket is 2 or 7.
+	Sends an event to the SteamBot with the event <name> and a table containing <data>.
 ]]--
-function FoxedBot.isReady()
-	if FoxedBot.sock:GetState() != 2 or FoxedBot.sock:GetState() != 7 then
-		return false
+function FoxedBot.sendEvent( name, data )
+	if type(name) != "string" then
+		error("bad argument #1 to 'sendEvent' (string expected, got "..type(name)..")")
+	elseif type(data) != "table" then
+		error("bad argument #2 to 'sendEvent' (table expected, got "..type(data)..")")
 	end
 
-	return true
+	local tbl = {
+		FoxedBot.ServerKey,
+		FoxedBot.ServerID,
+		"Event",
+		name,
+		data
+	}
+
+	local toSend = util.TableToJSON(tbl)
+
+	print(toSend)
+
+	local packet = BromPacket()
+	local client = BromSock(BROMSOCK_UDP)
+
+	packet:WriteStringRaw(toSend)
+	client:SendTo(packet, FoxedBot.BotIP, FoxedBot.BotPort)
+
+	client:Close()
+	packet:Clear()
+	client = nil
+	packet = nil
 end
 
 --[[
-	The chat callback is called whenever a message should be printed in chat.
+	Sends a <message> to <steamID> (SteamID64!).
 ]]--
-FoxedBot.addCallback("chat", function( steamID, name, message )
-	local data = {
-		name = name,
-		message = message
+function FoxedBot.sendMessage( steamID, message )
+	if type(steamID) != "string" then
+		error("bad argument #1 to 'sendMessage' (string expected, got "..type(steamID)..")")
+	elseif type(data) != "string" then
+		error("bad argument #2 to 'sendMessage' (string expected, got "..type(message)..")")
+	end
+
+	local tbl = {
+		FoxedBot.ServerKey,
+		FoxedBot.ServerID,
+		"Message",
+		steamID,
+		message
 	}
-	net.Start("FoxedBot_Chat")
-	net.WriteTable(data)
-	net.Send(player.GetAll())
-end)
+
+	local toSend = util.TableToJSON(tbl)
+
+	local packet = BromPacket()
+	local client = BromSock(BROMSOCK_UDP)
+
+	packet:WriteStringRaw(toSend)
+	client:SendTo(packet, FoxedBot.BotIP, FoxedBot.BotPort)
+
+	client:Close()
+	packet:Clear()
+	client = nil
+	packet = nil
+end
