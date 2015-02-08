@@ -6,12 +6,11 @@ addCommand("servers", false, function (steamID, name, args) {
 	};
 
 	sendMessage(steamID, text);
-	console.log(name + " requested the servers list.");
-})
+});
 
 addCommand("ping", false, function (steamID, name, args) {
 	sendMessage(steamID, "Pong!");
-})
+});
 
 addCommand("who", false, function (steamID, name, args) {
 	var admin = "No";
@@ -23,17 +22,38 @@ addCommand("who", false, function (steamID, name, args) {
 	var text = "\nName: " + name + "\nSteamID64: " + steamID + "\nAdmin: " + admin;
 
 	sendMessage(steamID, text);
-})
+});
 
-addCommand("showargs", false, function (steamID, name, args) {
-	var text = args.length + " arguments:";
+addCommand("adduser", true, function (steamID, name, args) {
+	if (!isNaN(args[0])) {
+		bot.addFriend(args[0]);
+		console.log(name + " added " + args[0] + ".")
+	} else {
+		sendMessage(steamID, "Please enter a valid SteamID64!");
+	}
+});
+
+addCommand("deluser", true, function (steamID, name, args) {
+	if (!isNaN(args[0])) {
+		bot.removeFriend(args[0]);
+		console.log(name + " removed " + args[0] + ".")
+	} else {
+		sendMessage(steamID, "Please enter a valid SteamID64!");
+	}
+});
+
+addCommand("admin", false, function (steamID, name, args) {
+	var text = "";
 
 	for (var i in args) {
-		text = text + "\n" + args[i];
+		text = text + " " + args[i];
 	}
-
-	sendMessage(steamID, text);
-})
+	if (text != "" || text != " ") {
+		for (var i in bot.friends) {
+			sendMessage(i, "[Admin Chat] " + name + ": " + text);
+		}
+	}
+});
 
 addCommand("select", false, function (steamID, name, args) {
 	var selectWork = [];
@@ -49,18 +69,16 @@ addCommand("select", false, function (steamID, name, args) {
 		var id = Number(args[i]);
 
 		if (!isNaN(args[i]) && id >= 0 && servers[id]) {
-			selectWork.push(id);
+			selectWork[id] = true;
 		}
 	}
-
-	selected[steamID] = selectWork;
 
 	if (selectWork.length > 0) {
 		if (selectWork.length != servers.length) {
 			var text = "You have selected server ";
 
 			for (var i in selectWork) {
-				text = text + selectWork[i];
+				text = text + i;
 				if (Number(i) + 1 != selectWork.length) {
 					text = text + ", ";
 				}
@@ -74,8 +92,21 @@ addCommand("select", false, function (steamID, name, args) {
 		}
 	} else {
 		sendMessage(steamID, "The server(s) you have selected couldn't be found.");
+		return;
 	}
-})
+
+	selected[steamID] = selectWork;
+});
+
+addCommand("listen", false, function (steamID, name, args) {
+	if (listening[steamID]) {
+		listening[steamID] = false;
+		sendMessage(steamID, "You have stopped listening to all servers.");
+	} else {
+		listening[steamID] = true;
+		sendMessage(steamID, "You are now listening to all selected servers.");
+	}
+});
 
 addCommand("chat", false, function (steamID, name, args) {
 	if (selected[steamID] && selected[steamID].length > 0) {
@@ -90,10 +121,44 @@ addCommand("chat", false, function (steamID, name, args) {
 				message: text
 			}
 			for (var i in selected[steamID]) {
-				sendToServer(selected[steamID][i], "chat", data);
+				sendToServer(i, "OnChat", data);
 			}
 		}
 	} else {
 		sendMessage(steamID, "You need to select a server first!");
 	}
-})
+});
+
+addCommand("announce", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var text = "";
+
+		for (var i in args) {
+			text = text + " " + args[i];
+		}
+		if (text != "" || text != " ") {
+			var data = {
+				message: text
+			}
+			for (var i in selected[steamID]) {
+				sendToServer(i, "OnAnnounce", data);
+			}
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});
+
+addCommand("getplayers", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var data = {
+			steamID: steamID
+		}
+
+		for (var i in selected[steamID]) {
+			sendToServer(i, "GetPlayers", data);
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});

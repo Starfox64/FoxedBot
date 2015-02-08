@@ -1,8 +1,11 @@
 require("bromsock")
 util.AddNetworkString("FoxedBot_Chat")
+util.AddNetworkString("FoxedBot_Announce")
 
+--FixedBot.waitingList = {}
 FoxedBot.callbacks = {}
 FoxedBot.sock = BromSock(BROMSOCK_UDP)
+FoxedBot.client = BromSock(BROMSOCK_UDP)
 
 --[[
 	This callback is called whenever a UDP packet is received on port <FoxedBot.ServerPort>.
@@ -78,19 +81,10 @@ function FoxedBot.sendEvent( name, data )
 	}
 
 	local toSend = util.TableToJSON(tbl)
-
-	print(toSend)
-
 	local packet = BromPacket()
-	local client = BromSock(BROMSOCK_UDP)
 
 	packet:WriteStringRaw(toSend)
-	client:SendTo(packet, FoxedBot.BotIP, FoxedBot.BotPort)
-
-	client:Close()
-	packet:Clear()
-	client = nil
-	packet = nil
+	FoxedBot.client:SendTo(packet, FoxedBot.BotIP, FoxedBot.BotPort)
 end
 
 --[[
@@ -112,15 +106,8 @@ function FoxedBot.sendMessage( steamID, message )
 	}
 
 	local toSend = util.TableToJSON(tbl)
-
 	local packet = BromPacket()
-	local client = BromSock(BROMSOCK_UDP)
 
 	packet:WriteStringRaw(toSend)
-	client:SendTo(packet, FoxedBot.BotIP, FoxedBot.BotPort)
-
-	client:Close()
-	packet:Clear()
-	client = nil
-	packet = nil
+	FoxedBot.client:SendTo(packet, FoxedBot.BotIP, FoxedBot.BotPort)
 end

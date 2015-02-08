@@ -1,3 +1,9 @@
 addEvent("OnChat", function (serverID, data) {
-	console.log("[" + serverID + "] " + data.name + ": " + data.text);
-})
+	for (var i in listening) {
+		if (listening[i]) {
+			if (selected[i] && selected[i][serverID]) {
+				sendMessage(i, "[" + serverID + "] " + data.name + ": " + data.text);
+			}
+		}
+	}
+});
