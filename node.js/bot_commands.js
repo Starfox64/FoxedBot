@@ -48,7 +48,8 @@ addCommand("admin", false, function (steamID, name, args) {
 	for (var i in args) {
 		text = text + " " + args[i];
 	}
-	if (text != "" || text != " ") {
+	
+	if (text != "" && text != " ") {
 		for (var i in bot.friends) {
 			sendMessage(i, "[Admin Chat] " + name + ": " + text);
 		}
@@ -108,6 +109,16 @@ addCommand("listen", false, function (steamID, name, args) {
 	}
 });
 
+addCommand("mute", false, function (steamID, name, args) {
+	if (muted[steamID]) {
+		muted[steamID] = false;
+		sendMessage(steamID, "FoxedBot is no longer muted.");
+	} else {
+		sendMessage(steamID, "FoxedBot is now muted.");
+		muted[steamID] = true;
+	}
+});
+
 addCommand("chat", false, function (steamID, name, args) {
 	if (selected[steamID] && selected[steamID].length > 0) {
 		var text = "";
@@ -115,7 +126,8 @@ addCommand("chat", false, function (steamID, name, args) {
 		for (var i in args) {
 			text = text + " " + args[i];
 		}
-		if (text != "" || text != " ") {
+
+		if (text != "" && text != " ") {
 			var data = {
 				name: name,
 				message: text
@@ -136,7 +148,8 @@ addCommand("announce", false, function (steamID, name, args) {
 		for (var i in args) {
 			text = text + " " + args[i];
 		}
-		if (text != "" || text != " ") {
+
+		if (text != "" && text != " ") {
 			var data = {
 				message: text
 			}
@@ -157,6 +170,191 @@ addCommand("getplayers", false, function (steamID, name, args) {
 
 		for (var i in selected[steamID]) {
 			sendToServer(i, "GetPlayers", data);
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});
+
+addCommand("rcon", true, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var text = "";
+
+		for (var i in args) {
+			text = text + " " + args[i];
+		}
+
+		if (text != "" && text != " ") {
+			var data = {
+				steamID: steamID,
+				command: text
+			}
+			for (var i in selected[steamID]) {
+				sendToServer(i, "OnRCON", data);
+			}
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});
+
+addCommand("kick", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var reason;
+		if (!args[0]) {
+			sendMessage(steamID, "You need to specify a name.");
+			return;
+		}
+
+		if (!args[1]) {
+			reason = "Kicked by FoxedBot";
+		} else {
+			reason = args[1];
+		}
+
+		var data = {
+			steamID: steamID,
+			name: args[0],
+			reason: reason
+		}
+
+		for (var i in selected[steamID]) {
+			sendToServer(i, "OnKick", data);
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});
+
+addCommand("kickid", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var reason;
+		if (!args[0]) {
+			sendMessage(steamID, "You need to specify a UserID.");
+			return;
+		}
+
+		if (isNaN(args[0])) {
+			sendMessage(steamID, "Argument #1 needs to be a number!");
+			return;
+		}
+
+		if (!args[1]) {
+			reason = "Kicked by FoxedBot";
+		} else {
+			reason = args[1];
+		}
+
+		var data = {
+			steamID: steamID,
+			userID: Number(args[0]),
+			reason: reason
+		}
+
+		for (var i in selected[steamID]) {
+			sendToServer(i, "OnKickID", data);
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});
+
+addCommand("ban", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var time;
+		var reason;
+		if (!args[0]) {
+			sendMessage(steamID, "You need to specify a name.");
+			return;
+		}
+
+		if (!args[1]) {
+			time = 0;
+		} else {
+			if (isNaN(args[1])) {
+				sendMessage(steamID, "Argument #2 needs to be a number!");
+				return;
+			} else {
+				time = Number(args[1]);
+			}
+		}
+
+		if (!args[2]) {
+			reason = "Banned by FoxedBot";
+		} else {
+			reason = args[2];
+		}
+
+		var data = {
+			steamID: steamID,
+			name: args[0],
+			time: time,
+			reason: reason
+		}
+
+		for (var i in selected[steamID]) {
+			sendToServer(i, "OnBan", data);
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});
+
+addCommand("banid", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		var time;
+		var reason;
+		if (!args[0]) {
+			sendMessage(steamID, "You need to specify a SteamID.");
+			return;
+		}
+
+		if (!args[1]) {
+			time = 0;
+		} else {
+			if (isNaN(args[1])) {
+				sendMessage(steamID, "Argument #2 needs to be a number!");
+				return;
+			} else {
+				time = Number(args[1]);
+			}
+		}
+
+		if (!args[2]) {
+			reason = "Banned by FoxedBot";
+		} else {
+			reason = args[2];
+		}
+
+		var data = {
+			steamID: steamID,
+			target: args[0],
+			time: time,
+			reason: reason
+		}
+
+		for (var i in selected[steamID]) {
+			sendToServer(i, "OnBanID", data);
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!");
+	}
+});
+
+addCommand("unban", false, function (steamID, name, args) {
+	if (selected[steamID] && selected[steamID].length > 0) {
+		if (!args[0]) {
+			sendMessage(steamID, "You need to specify a SteamID.");
+			return;
+		}
+
+		var data = {
+			steamID: steamID,
+			target: args[0]
+		}
+
+		for (var i in selected[steamID]) {
+			sendToServer(i, "OnUnban", data);
 		}
 	} else {
 		sendMessage(steamID, "You need to select a server first!");

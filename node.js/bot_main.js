@@ -1,13 +1,14 @@
-var dgram = require("dgram");
+var net = require("net");
 var Steam = require("steam");
 
 var bot = new Steam.SteamClient();
-var server = dgram.createSocket("udp4");
+var server = net.createServer();;
 
 var events = {};
 var commands = {};
 var selected = {};
 var listening = {};
+var muted = {};
 
 bot.logOn({
 	accountName: accountName,
@@ -45,9 +46,10 @@ bot.on("loggedOn", function() {
 	console.log("Logged in as " + accountName + "!");
 	bot.setPersonaState(Steam.EPersonaState.Online);
 	bot.setPersonaName(botName);
-	server.bind(botPort, "127.0.0.1"); // Start listening when the bot is connected to Steam.
+	server.listen(botPort); // Starts listening when the bot is connected to Steam.
 });
 
+/* Handles incoming messages */
 bot.on("friendMsg", function (source, message) {
 	if (bot.friends[source] == Steam.EFriendRelationship.Friend) { // Checks if the source is a friend.
 		var name = bot.users[source].playerName;
@@ -56,28 +58,79 @@ bot.on("friendMsg", function (source, message) {
 				console.log(name + ": " + message); // Echoes the message to the console if enabled.
 			}
 			if (message.substring(0, 1) == commandChar) { // checks if the first character is the command character (!).
+				var length = 0;
+				for (var i in message) { // This loop gets the length of the entered command.
+					if (message[i] == " ") {
+						length = i;
+						break;
+					}
+				}
+
+				if (length == 0) {
+					length = message.length;
+				}
+
 				for (var command in commands) { // Looks for the command in the commands array.
-					if (message.toLowerCase().substring(1, command.length + 1) == command.toLowerCase()) {
+					if (message.toLowerCase().substring(1, length) == command.toLowerCase()) {
 						if (!commands[command].admin || isAdmin(source)) { // Checks if the command requires admin rights.
 							commands[command].func(source, name, parseArguments(message.slice(command.length + 1))); // Parses the command's arguments and runs the commands function.
 						} else {
 							sendMessage(source, "Access Denied!");
 						}
-						break;
+						return;
 					}
 				}
+				sendMessage(source, "Command not found.");
 			}
+		}
+	}
+});
+
+/* Makes sure peoples that aren't friends can't listen */
+bot.on("friend", function (steamID, status) {
+	if (status != Steam.EFriendRelationship.Friend) {
+		if (listening[steamID]) {
+			listening[steamID] = null;
 		}
 	}
 });
 
 server.on("listening", function () {
 	var address = server.address();
-	console.log("UDP Server listening on port " + address.port + ".");
+	console.log("FoxedBot is now listening on port " + address.port + ".");
+});
+
+/* Handles incoming data */
+server.on("connection", function (sock) {
+	sock.on("data", function (packet) {
+		var data;
+		try {
+			if (packet.toString()[0] != "{") {
+				data = JSON.parse(packet.toString().substring(4)); // Removes the 4 first characters if the first one isn't '{'
+			} else {
+				data = JSON.parse(packet.toString());
+			}
+		} catch (e) {}
+		if (data) {
+			if (data["1"] == serverKey) {
+				if (data["3"] == "Event") {
+					if (events[data["4"]]) {
+						events[data["4"]](data["2"], data["5"]);
+					} else {
+						console.log("Warning: " + sock.remoteAddress + " tried to trigger an unknown event! (" + data["4"] + ")");
+					}
+				} else {
+					sendMessage(data["4"], data["5"]);
+				}
+			} else {
+				console.log("Warning: " + sock.remoteAddress + " tried to connect with the wrong ServerKey!");
+			}
+		}
+	});
 });
 
 /* Parses incoming UDP packets */
-server.on("message", function (message, remote) {
+/*server.on("message", function (message, remote) {
 	try {
 		var data = JSON.parse(message.toString());
 	} catch (err) {
@@ -98,4 +151,4 @@ server.on("message", function (message, remote) {
 			console.log("Warning: " + remote.address + " tried to connect with the wrong ServerKey!");
 		}
 	}
-});
+});*/

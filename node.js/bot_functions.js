@@ -68,20 +68,39 @@ function parseArguments (toParse) {
 }
 
 function sendToServer (serverID, callback, data) {
-	var toSend = [
+	var jsonData = [
 		serverKey,
 		callback,
 		data
 	];
-	var buff = new Buffer(JSON.stringify(toSend));
-	var client = dgram.createSocket("udp4");
 
-	client.send(buff, 0, buff.length, servers[serverID].port, servers[serverID].ip, function (err, bytes) {
-		if (err) throw err;
-		client.close();
+	var toSend = JSON.stringify(jsonData);
+	var client = new net.Socket();
+	var size = Buffer.byteLength(toSend);
+	var b1 = size & 0xff;
+	var b2 = (size>>>8) & 0xff;
+	var b3 = (size>>>16) & 0xff;
+	var b4 = (size>>>24) & 0xff;
+	var prefix = String.fromCharCode(b4, b3, b2, b1);
+
+	client.setTimeout(3000, function () {
+		client.end();
+		client.destroy();
+	});
+
+	client.on("error", function (err) {
+		console.log("An error occured while trying to send data to server " + serverID + ".");
+	});
+
+	client.connect(servers[serverID].port, servers[serverID].ip, function () {
+		client.write(prefix + toSend);
 	});
 }
 
 function sendMessage (steamID, message) {
-	bot.sendMessage(steamID, message, Steam.EChatEntryType.ChatMsg);
+	if (muted[steamID] != true && bot.users[steamID]) {
+		if (sendOffline || bot.users[steamID].personaState != Steam.EPersonaState.Offline) {
+			bot.sendMessage(steamID, message, Steam.EChatEntryType.ChatMsg);
+		}
+	}
 }

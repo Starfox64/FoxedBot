@@ -16,6 +16,9 @@ var botPort = 25000;
 /* Echo incoming message to the console */
 var showChat = true;
 
+/* Sends messages even if the target is offline */
+var sendOffline = false;
+
 /* The character that will be used to parse commands */
 var commandChar = "!";
 
