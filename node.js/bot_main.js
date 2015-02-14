@@ -73,7 +73,7 @@ bot.on("friendMsg", function (source, message) {
 				for (var command in commands) { // Looks for the command in the commands array.
 					if (message.toLowerCase().substring(1, length) == command.toLowerCase()) {
 						if (!commands[command].admin || isAdmin(source)) { // Checks if the command requires admin rights.
-							commands[command].func(source, name, parseArguments(message.slice(command.length + 1))); // Parses the command's arguments and runs the commands function.
+							commands[command].func(source, name, parseArguments(message.slice(command.length + 1)), message.slice(command.length + 1)); // Parses the command's arguments and runs the commands function.
 						} else {
 							sendMessage(source, "Access Denied!");
 						}
@@ -128,27 +128,3 @@ server.on("connection", function (sock) {
 		}
 	});
 });
-
-/* Parses incoming UDP packets */
-/*server.on("message", function (message, remote) {
-	try {
-		var data = JSON.parse(message.toString());
-	} catch (err) {
-		console.log("Warning: " + remote.address + " tried to send a non JSON message!");
-	}
-	if (data) {
-		if (data["1"] == serverKey) {
-			if (data["3"] == "Event") {
-				if (events[data["4"]]) {
-					events[data["4"]](data["2"], data["5"]);
-				} else {
-					console.log("Warning: " + remote.address + " tried to trigger an unknown event! (" + data["4"] + ")");
-				}
-			} else {
-				sendMessage(data["4"], data["5"]);
-			}
-		} else {
-			console.log("Warning: " + remote.address + " tried to connect with the wrong ServerKey!");
-		}
-	}
-});*/

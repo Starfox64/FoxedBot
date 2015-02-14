@@ -1,3 +1,13 @@
+addCommand("help", false, function (steamID, name, args) {
+	var text = "Available commands:";
+
+	for (var i in commands) {
+		text = text + "\n    - " + i;
+	};
+
+	sendMessage(steamID, text);
+});
+
 addCommand("servers", false, function (steamID, name, args) {
 	var text = "Servers:";
 
@@ -24,6 +34,22 @@ addCommand("who", false, function (steamID, name, args) {
 	sendMessage(steamID, text);
 });
 
+addCommand("friends", true, function (steamID, name, args) {
+	var text = "Friends:";
+
+	for (var i in bot.friends) {
+		if (bot.friends[i] == Steam.EFriendRelationship.Friend) {
+			if (bot.users[i]) {
+				text = text + "\n[" + i + "] " + bot.users[i].playerName;
+			} else {
+				text = text + "\n[" + i + "] ERROR: Name not found";
+			}
+		}
+	};
+
+	sendMessage(steamID, text);
+});
+
 addCommand("adduser", true, function (steamID, name, args) {
 	if (!isNaN(args[0])) {
 		bot.addFriend(args[0]);
@@ -42,16 +68,12 @@ addCommand("deluser", true, function (steamID, name, args) {
 	}
 });
 
-addCommand("admin", false, function (steamID, name, args) {
-	var text = "";
-
-	for (var i in args) {
-		text = text + " " + args[i];
-	}
-	
-	if (text != "" && text != " ") {
+addCommand("admin", false, function (steamID, name, args, strArgs) {
+	if (strArgs != "" && strArgs != " ") {
 		for (var i in bot.friends) {
-			sendMessage(i, "[Admin Chat] " + name + ": " + text);
+			if (bot.friends[i] == Steam.EFriendRelationship.Friend) {
+				sendMessage(i, "[Admin Chat] " + name + ": " + strArgs);
+			}
 		}
 	}
 });
@@ -119,18 +141,12 @@ addCommand("mute", false, function (steamID, name, args) {
 	}
 });
 
-addCommand("chat", false, function (steamID, name, args) {
+addCommand("chat", false, function (steamID, name, args, strArgs) {
 	if (selected[steamID] && selected[steamID].length > 0) {
-		var text = "";
-
-		for (var i in args) {
-			text = text + " " + args[i];
-		}
-
-		if (text != "" && text != " ") {
+		if (strArgs != "" && strArgs != " ") {
 			var data = {
 				name: name,
-				message: text
+				message: strArgs
 			}
 			for (var i in selected[steamID]) {
 				sendToServer(i, "OnChat", data);
@@ -141,18 +157,13 @@ addCommand("chat", false, function (steamID, name, args) {
 	}
 });
 
-addCommand("announce", false, function (steamID, name, args) {
+addCommand("announce", false, function (steamID, name, args, strArgs) {
 	if (selected[steamID] && selected[steamID].length > 0) {
-		var text = "";
-
-		for (var i in args) {
-			text = text + " " + args[i];
-		}
-
-		if (text != "" && text != " ") {
+		if (strArgs != "" && strArgs != " ") {
 			var data = {
-				message: text
+				message: strArgs
 			}
+
 			for (var i in selected[steamID]) {
 				sendToServer(i, "OnAnnounce", data);
 			}
@@ -162,7 +173,7 @@ addCommand("announce", false, function (steamID, name, args) {
 	}
 });
 
-addCommand("getplayers", false, function (steamID, name, args) {
+addCommand("players", false, function (steamID, name, args) {
 	if (selected[steamID] && selected[steamID].length > 0) {
 		var data = {
 			steamID: steamID
@@ -176,19 +187,14 @@ addCommand("getplayers", false, function (steamID, name, args) {
 	}
 });
 
-addCommand("rcon", true, function (steamID, name, args) {
+addCommand("rcon", true, function (steamID, name, args, strArgs) {
 	if (selected[steamID] && selected[steamID].length > 0) {
-		var text = "";
-
-		for (var i in args) {
-			text = text + " " + args[i];
-		}
-
-		if (text != "" && text != " ") {
+		if (strArgs != "" && strArgs != " ") {
 			var data = {
 				steamID: steamID,
-				command: text
+				command: strArgs
 			}
+
 			for (var i in selected[steamID]) {
 				sendToServer(i, "OnRCON", data);
 			}

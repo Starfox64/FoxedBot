@@ -41,10 +41,12 @@ function parseArguments (toParse) {
 				continue;
 			}
 		} else {
-			if (toParse[i] == "\"" || toParse[i] == "'") {
-				quote = toParse[i];
-				work[arg] = "";
-				continue;
+			if (!writing) {
+				if (toParse[i] == "\"" || toParse[i] == "'") {
+					quote = toParse[i];
+					work[arg] = "";
+					continue;
+				}
 			}
 		}
 		if (writing) {
