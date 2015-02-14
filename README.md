@@ -199,6 +199,10 @@ addEvent("OnChat", function (serverID, data) {
 ```
 
 # Notes
+Support
+-------
+If you are having issues with FoxedBot please use the [issues tracker][8] and check if a similar issue was posted before posting yours. Remember to provide as much information as possible.
+
 Pull Requests
 -------------
 Feel free to submit your pull requests if you beleive FoxedBot lacks a feature or if you find a bug that you are able to fix.  
@@ -216,3 +220,4 @@ Credits
 [5]:https://sliksvn.com/download/ "SlikSVN"
 [6]:http://facepunch.com/showthread.php?t=1393640 "gm_bromsock"
 [7]:https://github.com/foreverjs/forever "forever"
+[8]:https://github.com/Starfox64/FoxedBot/issues "issues"
