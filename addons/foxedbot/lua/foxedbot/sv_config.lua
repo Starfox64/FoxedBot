@@ -8,7 +8,7 @@ FoxedBot.BotIP = "127.0.0.1"
 FoxedBot.BotPort = 25000
 
 -- ServerPort: The port the server is going to use to receive messages from the bot. (Cannot be the same as another server if on the same machine)
-FoxedBot.ServerPort = 25101
+FoxedBot.ServerPort = 25100
 
 -- ServerKey: A key / password used to secure interactions between the server and the bot.
 FoxedBot.ServerKey = "fpofYzF65dQe"
