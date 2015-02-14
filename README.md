@@ -68,9 +68,146 @@ Before you brainlessly use the **adduser** command you need to be aware of this:
 !deluser <SteamID64>
 ```
 
-Actually using FoxedBot
------------------------
-_**To be continued**_
+FoxedBot Commands
+-----------------
+Command        | Description                                   | Arguments                                | Admin
+:--------------|:----------------------------------------------|:-----------------------------------------|:-----
+help           | Sends a list of commands                      | N/A                                      | **No**
+servers        | Sends a list of servers                       | N/A                                      | **No**
+ping           | Sends back **Pong!**                          | N/A                                      | **No**
+who            | Sends infos about you                         | N/A                                      | **No**
+friends        | Sends the SteamBot's friends                  | N/A                                      | **Yes**
+adduser        | Accept / send a friend request                | ```<SteamID64>```                        | **Yes**
+deluser        | Removes a friend                              | ```<SteamID64>```                        | **Yes**
+admin          | Sends a message to all users                  | ```<Message>```                          | **No**
+select         | Select a server with it's ID                  | ```<ServerID> [ServerID]...```           | **No**
+listen         | Displays selectected server's chat & events   | N/A                                      | **No**
+mute           | You won't receive any messages from FoxedBot  | N/A                                      | **No**
+chat           | Sends a chat message                          | ```<Message>```                          | **No**
+announce       | Displays an announcement                      | ```<Message>```                          | **No**
+players        | Sends the list of players                     | N/A                                      | **No**
+rcon           | Executes a console command                    | ```<Command>```                          | **Yes**
+kick           | Kicks a player using his name                 | ```<Name> [Reason]```                    | **No**
+kickid         | Kicks a player using his UserID               | ```<UserID> [Reason]```                  | **No**
+ban            | Bans a player using his name                  | ```<Name> [Minutes] [Reason]```          | **No**
+banid          | Bans a player using his SteamID (No SteamID64)| ```<SteamID> [Minutes] [Reason]```       | **No**
+unban          | Unbans a player using his SteamID             | ```<SteamID>```                          | **No**
+
+# Developers
+_This section is for developers who which to add commands, callbacks and events._  
+  
+Commands, callbacks and event, what are they? Commands are functions that will be called when a command is ran, callbacks are functions that will be ran on the server when the SteamBot tells him to and events are functions that will be ran on the SteamBot when a server tells him to.
+Commands
+--------
+Commands can easily be added to FoxedBot in the **bot_commands.js** file.  
+**Format**
+```js
+addCommand("CommandName", AdminOnly, function (steamID, name, args, strArgs) {});
+```
+**Arguments**
+
+Type     | Description
+---------|----------------------------------------------------------
+string   | The name of the command
+bool     | Weither or not the command is admin only
+function | The function that will be called when the command is ran
+
+**Function Arguments**
+
+Variable   | Type     | Description
+-----------|----------|------------------------------------------------
+steamID    | string   | The SteamID64 of the user who ran the command
+name       | string   | The name of the user who ran the command
+args       | array    | The arguments of the command parsed as an array
+strArgs    | string   | The arguments of the function in a raw string
+
+**Example**
+```js
+addCommand("chat", false, function (steamID, name, args, strArgs) {
+	if (selected[steamID] && selected[steamID].length > 0) { // Checks if the user selected a server.
+		if (strArgs != "" && strArgs != " ") { // Checks if the ran arguments isn't empty
+			var data = { // Creates the array that will be sent
+				name: name,
+				message: strArgs
+			}
+			for (var i in selected[steamID]) { // Calls the OnChat callback on all selected servers
+				sendToServer(i, "OnChat", data);
+			}
+		}
+	} else {
+		sendMessage(steamID, "You need to select a server first!"); // Tells the user to select a server
+	}
+});
+```
+
+Callbacks
+---------
+Callbacks can easily be added to FoxedBot in the **sv_callbacks.lua** file.  
+**Format**
+```lua
+FoxedBot.addCallback("CallbackName", function( data ) end)
+```
+_data_ is a table containing data that may be required for the callback, for example a message to display.  
+**Example**
+```lua
+FoxedBot.addCallback("OnRCON", function( data )
+	game.ConsoleCommand(data.command.."\n") -- Executes data.command
+	FoxedBot.sendMessage(data.steamID, data.command.." has been executed on server "..FoxedBot.ServerID..".") -- Sends a confirmation to the user
+end)
+```
+
+Events
+------
+Events can easily be added to FoxedBot in the **sv_events.lua** and **bot_events.js** files.  
+**Sending event**
+```lua
+local data = {
+	text = "Hello World!"
+}
+
+FoxedBot.sendEvent("EventName", data)
+```
+
+**Receiving an event**
+```js
+addEvent("EventName", function (serverID, data) {});
+```
+
+**Example**
+```lua
+hook.Add("PlayerSay", "FoxedBot_PlayerSay", function( ply, text ) -- Called when a player says something
+	if FoxedBot.SendChat then -- Checks is SendChat is enabled
+		local data = { -- Creates the table to send
+			name = ply:Name(),
+			text = text
+		}
+
+		FoxedBot.sendEvent("OnChat", data) -- Sends the event to the SteamBot
+	end
+end)
+```
+```js
+addEvent("OnChat", function (serverID, data) {
+	for (var i in listening) { // For all users in the listening array
+		if (listening[i]) { // Checks if the user is listening
+			if (selected[i] && selected[i][serverID]) { // Checks if the user is listening to the current serverID
+				sendMessage(i, "[" + serverID + "] " + data.name + ": " + data.text); // Sends the chat to the user
+			}
+		}
+	}
+});
+```
+
+# Notes
+Pull Requests
+-------------
+Feel free to submit your pull requests if you beleive FoxedBot lacks a feature or if you find a bug that you are able to fix.  
+**Note:** However, please try to follow my coding style.
+
+Credits
+-------
+**seishun** - node-steam
+**_FR_Starfox64** - FoxedBot
 
 [1]:https://github.com/seishun "seishun"
 [2]:https://github.com/seishun/node-steam "node-steam"
