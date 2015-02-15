@@ -1,0 +1,21 @@
+{
+  "name": "foxedbot",
+  "version": "1.0.0",
+  "description": "A SteamBot for Garry's Mod.",
+  "main": "./app.js",
+  "scripts": {
+    "postinstall": "cd ./node_modules/steam && npm install"
+  },
+  "dependencies": {
+    "steam": "https://github.com/seishun/node-steam/tarball/master"
+  },
+  "engines": {
+    "node": ">=0.12"
+  },
+  "keywords": [
+    "steam",
+    "garrysmod"
+  ],
+  "author": "_FR_Starfox64 <louisdijon21@yahoo.fr>",
+  "license": "GNU-GPL v2"
+}

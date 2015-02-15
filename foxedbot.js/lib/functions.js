@@ -1,22 +1,12 @@
-/* Use this functions to add an event */
-function addEvent (name, func) {
-	events[name] = func;
-}
+var Config = require("../config/settings.js");
+var exports = module.exports = {};
 
-/* Use this function to add a command */
-function addCommand (name, admin, func) {
-	var work = {
-		admin: admin,
-		func: func
-	};
-	commands[name] = work;
-}
 
-function isAdmin (steamID) {
+exports.isAdmin = function(steamID) {
 	var isAdmin = false;
 
-	for (var i in admins) {
-		if (admins[i] == steamID) {
+	for (var i in Config.admins) {
+		if (Config.admins[i] == steamID) {
 			isAdmin = true;
 			break;
 		}
@@ -25,7 +15,7 @@ function isAdmin (steamID) {
 	return isAdmin;
 }
 
-function parseArguments (toParse) {
+exports.parseArguments = function(toParse) {
 	var work = [];
 	var quote = false;
 	var writing = false;
@@ -69,7 +59,7 @@ function parseArguments (toParse) {
 	return work;
 }
 
-function sendToServer (serverID, callback, data) {
+exports.sendToServer = function(serverID, callback, data) {
 	var jsonData = [
 		serverKey,
 		callback,
@@ -94,15 +84,7 @@ function sendToServer (serverID, callback, data) {
 		console.log("An error occured while trying to send data to server " + serverID + ".");
 	});
 
-	client.connect(servers[serverID].port, servers[serverID].ip, function () {
+	client.connect(Config.servers[serverID].port, Config.servers[serverID].ip, function () {
 		client.write(prefix + toSend);
 	});
-}
-
-function sendMessage (steamID, message) {
-	if (muted[steamID] != true && bot.users[steamID]) {
-		if (sendOffline || bot.users[steamID].personaState != Steam.EPersonaState.Offline) {
-			bot.sendMessage(steamID, message, Steam.EChatEntryType.ChatMsg);
-		}
-	}
 }

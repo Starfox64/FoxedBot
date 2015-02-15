@@ -11,31 +11,19 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
 **Requirements**  
 >- [Node.js][3] (>= 0.12.0)
 >- [node-steam][2]
->- Git (Windows: [Git for Windows][4])
 >- SVN (Windows: [SlikSVN][5])
 >- [gm_bromsock][6]
-
-# node-steam Installation
-_Sorry, no installation guide for Linux as of now, you should be able to figure it out though._
-> **Windows**
->- Make sure that Node.js, Git for Windows and SlikSVN are installed
->- Open the **Git Shell** and enter this command:
-```
-npm install git://github.com/seishun/node-steam.git
-```
->- Navigate (using the cd command) to **_CurrentUser_/node_modules/steam**
->- Enter the following command:
-```
-npm install
-```
->- You can now close the shell, **node-steam** should be installed
 
 # FoxedBot Installation
 > **SteamBot**
 >- Create a new Steam account for the SteamBot
 >- Add the SteamBot to your friend-list
->- In the folder of your choice extract the contents of the _node.js_ folder
->- Open **bot_config.js** with your favorite text editor
+>- In the folder of your choice extract the contents of the _foxedbot.js_ folder
+>- Open the command-line, navigate to the SteamBot's installation folder and enter this command:
+```
+npm install
+```
+>- Open **config/settingg.js** with your favorite text editor
 >- Configure the SteamBot to suit your needs
 
 > **Garry's Mod Server**
@@ -53,7 +41,7 @@ Starting-up FoxedBot
 --------------------
 The first thing you probably want do at this point is to startup FoxedBot, to do so open a command prompt, navigate to the installation directory of FoxedBot and enter this command:
 ```
-node bot_start.js
+node app.js
 ```
 Thats it, FoxedBot is now running, forever, or not.  
   
@@ -99,7 +87,7 @@ _This section is for developers who which to add commands, callbacks and events.
 Commands, callbacks and event, what are they? Commands are functions that will be called when a command is ran, callbacks are functions that will be ran on the server when the SteamBot tells him to and events are functions that will be ran on the SteamBot when a server tells him to.
 Commands
 --------
-Commands can easily be added to FoxedBot in the **bot_commands.js** file.  
+Commands can easily be added to FoxedBot in the **config/commands.js** file.  
 **Format**
 ```js
 addCommand("CommandName", AdminOnly, function (steamID, name, args, strArgs) {});
@@ -158,7 +146,7 @@ end)
 
 Events
 ------
-Events can easily be added to FoxedBot in the **sv_events.lua** and **bot_events.js** files.  
+Events can easily be added to FoxedBot in the **sv_events.lua** and **config/events.js** files.  
 **Sending event**
 ```lua
 local data = {
@@ -212,6 +200,7 @@ Credits
 -------
 **seishun** - node-steam  
 **_FR_Starfox64** - FoxedBot
+**Metamist** - Node.js Consultant ;)
 
 [1]:https://github.com/seishun "seishun"
 [2]:https://github.com/seishun/node-steam "node-steam"
