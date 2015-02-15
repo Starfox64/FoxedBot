@@ -199,7 +199,7 @@ Feel free to submit your pull requests if you beleive FoxedBot lacks a feature o
 Credits
 -------
 **seishun** - node-steam  
-**_FR_Starfox64** - FoxedBot
+**_FR_Starfox64** - FoxedBot  
 **Metamist** - Node.js Consultant ;)
 
 [1]:https://github.com/seishun "seishun"
