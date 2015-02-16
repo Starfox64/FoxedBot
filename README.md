@@ -10,7 +10,7 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
   
 **Requirements**  
 >- [Node.js][3] (>= 0.12.0)
->- [node-steam][2]
+>- Git (Windows: [Git for Windows][4])
 >- SVN (Windows: [SlikSVN][5])
 >- [gm_bromsock][6]
 
