@@ -22,6 +22,8 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
 >- Open the command-line, navigate to the SteamBot's installation folder and enter this command:
 ```
 npm install
+/* If you have issues on Linux use the following command */
+npm install --unsafe-perm
 ```
 >- Open **config/settingg.js** with your favorite text editor
 >- Configure the SteamBot to suit your needs
