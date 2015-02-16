@@ -90,7 +90,7 @@ Commands
 Commands can easily be added to FoxedBot in the **config/commands.js** file.  
 **Format**
 ```js
-addCommand("CommandName", AdminOnly, function (steamID, name, args, strArgs) {});
+app.addCommand("CommandName", AdminOnly, function (steamID, name, args, strArgs) {});
 ```
 **Arguments**
 
@@ -111,19 +111,19 @@ strArgs    | string   | The arguments of the function in a raw string
 
 **Example**
 ```js
-addCommand("chat", false, function (steamID, name, args, strArgs) {
-	if (selected[steamID] && selected[steamID].length > 0) { // Checks if the user selected a server.
+app.addCommand("chat", false, function (steamID, name, args, strArgs) {
+	if (app.Selected[steamID] && app.Selected[steamID].length > 0) { // Checks if the user selected a server.
 		if (strArgs != "" && strArgs != " ") { // Checks if the ran arguments isn't empty
 			var data = { // Creates the array that will be sent
 				name: name,
 				message: strArgs
 			}
 			for (var i in selected[steamID]) { // Calls the OnChat callback on all selected servers
-				sendToServer(i, "OnChat", data);
+				func.sendToServer(i, "OnChat", data);
 			}
 		}
 	} else {
-		sendMessage(steamID, "You need to select a server first!"); // Tells the user to select a server
+		app.sendMessage(steamID, "You need to select a server first!"); // Tells the user to select a server
 	}
 });
 ```
@@ -158,7 +158,7 @@ FoxedBot.sendEvent("EventName", data)
 
 **Receiving an event**
 ```js
-addEvent("EventName", function (serverID, data) {});
+app.on("EventName", function (serverID, data) {});
 ```
 
 **Example**
@@ -175,11 +175,11 @@ hook.Add("PlayerSay", "FoxedBot_PlayerSay", function( ply, text ) -- Called when
 end)
 ```
 ```js
-addEvent("OnChat", function (serverID, data) {
-	for (var i in listening) { // For all users in the listening array
-		if (listening[i]) { // Checks if the user is listening
-			if (selected[i] && selected[i][serverID]) { // Checks if the user is listening to the current serverID
-				sendMessage(i, "[" + serverID + "] " + data.name + ": " + data.text); // Sends the chat to the user
+app.on("OnChat", function (serverID, data) {
+	for (var i in app.Listening) { // For all users in the listening array
+		if (app.Listening[i]) { // Checks if the user is listening
+			if (app.Selected[i] && app.Selected[i][serverID]) { // Checks if the user is listening to the current serverID
+				app.sendMessage(i, "[" + serverID + "] " + data.name + ": " + data.text); // Sends the chat to the user
 			}
 		}
 	}
