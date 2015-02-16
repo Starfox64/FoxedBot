@@ -87,7 +87,7 @@ app.addCommand("select", false, function (steamID, name, args) {
 
 	for (var i in args) {
 		if (args[i] == "*") {
-			for (var k in servers) {
+			for (var k in Config.servers) {
 				selectWork.push(k);
 			}
 			break;
@@ -95,13 +95,13 @@ app.addCommand("select", false, function (steamID, name, args) {
 
 		var id = Number(args[i]);
 
-		if (!isNaN(args[i]) && id >= 0 && servers[id]) {
+		if (!isNaN(args[i]) && id >= 0 && Config.servers[id]) {
 			selectWork[id] = true;
 		}
 	}
 
 	if (selectWork.length > 0) {
-		if (selectWork.length != servers.length) {
+		if (selectWork.length != Config.servers.length) {
 			var text = "You have selected server ";
 
 			for (var i in selectWork) {

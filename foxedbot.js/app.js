@@ -18,7 +18,7 @@ app.Listening = {};
 app.Muted = {};
 
 var bot = app.bot; // Shortcut
-var server = net.createServer();;
+var server = net.createServer();
 
 
 app.addCommand = function (commandName, admin, func) {
@@ -43,7 +43,8 @@ require("./config/commands.js");
 
 bot.logOn({
 	accountName: Config.accountName,
-	password: Config.password
+	password: Config.password,
+	authCode: Config.authCode
 });
 
 bot.on("error", function (e) {

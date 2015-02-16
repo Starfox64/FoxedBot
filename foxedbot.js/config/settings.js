@@ -6,6 +6,9 @@ module.exports = {
 	accountName: "<BotUsername>",
 	password: "<BotPassword>",
 
+	/* Steam Guard code: set to 'authCode: null,' once the bot is verified */
+	authCode: "<SteamGuardCode>",
+
 
 	/* The ServerKey of the SteamBot */
 	serverKey: "ChangeMe!",
