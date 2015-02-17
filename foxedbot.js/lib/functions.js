@@ -1,3 +1,4 @@
+var net = require("net");
 var Config = require("../config/settings.js");
 var exports = module.exports = {};
 
@@ -61,7 +62,7 @@ exports.parseArguments = function(toParse) {
 
 exports.sendToServer = function(serverID, callback, data) {
 	var jsonData = [
-		serverKey,
+		Config.serverKey,
 		callback,
 		data
 	];

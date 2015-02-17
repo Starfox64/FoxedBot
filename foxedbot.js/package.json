@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "A SteamBot for Garry's Mod.",
   "main": "./app.js",
+  "repository": {
+  	"type": "svn",
+  	"url": "https://github.com/Starfox64/FoxedBot/trunk/foxedbot.js"
+  },
+  "private": true,
   "scripts": {
     "postinstall": "cd ./node_modules/steam && npm install"
   },
@@ -16,6 +21,7 @@
     "steam",
     "garrysmod"
   ],
+  "homepage": "https://github.com/Starfox64/FoxedBot",
   "author": "_FR_Starfox64 <louisdijon21@yahoo.fr>",
   "license": "GNU-GPL v2"
 }

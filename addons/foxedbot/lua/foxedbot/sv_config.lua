@@ -11,7 +11,7 @@ FoxedBot.BotPort = 25000
 FoxedBot.ServerPort = 25100
 
 -- ServerKey: A key / password used to secure interactions between the server and the bot.
-FoxedBot.ServerKey = "fpofYzF65dQe"
+FoxedBot.ServerKey = "ChangeMe!"
 
 -- FEATURES --
 -- SendChat: Send the server's chat to the SteamBot.

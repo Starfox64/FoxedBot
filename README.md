@@ -57,6 +57,8 @@ Before you brainlessly use the **adduser** command you need to be aware of this:
 !adduser <SteamID64>
 !deluser <SteamID64>
 ```
+  
+**Note:** Whenever the SteamBot crashes you'll need to run the **foxedbot_reload** command in order to reload the sockets.
 
 FoxedBot Commands
 -----------------
@@ -160,7 +162,7 @@ FoxedBot.sendEvent("EventName", data)
 
 **Receiving an event**
 ```js
-app.on("EventName", function (serverID, data) {});
+events.on("EventName", function (serverID, data) {});
 ```
 
 **Example**
@@ -177,7 +179,7 @@ hook.Add("PlayerSay", "FoxedBot_PlayerSay", function( ply, text ) -- Called when
 end)
 ```
 ```js
-app.on("OnChat", function (serverID, data) {
+events.on("OnChat", function (serverID, data) {
 	for (var i in app.Listening) { // For all users in the listening array
 		if (app.Listening[i]) { // Checks if the user is listening
 			if (app.Selected[i] && app.Selected[i][serverID]) { // Checks if the user is listening to the current serverID
@@ -195,7 +197,7 @@ If you are having issues with FoxedBot please use the [issues tracker][8] and ch
 
 Pull Requests
 -------------
-Feel free to submit your pull requests if you beleive FoxedBot lacks a feature or if you find a bug that you are able to fix.  
+Feel free to submit your pull requests if you believe FoxedBot lacks a feature or if you find a bug that you are able to fix.  
 **Note:** However, please try to follow my coding style.
 
 Credits

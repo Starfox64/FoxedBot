@@ -6,7 +6,7 @@ module.exports = {
 	accountName: "<BotUsername>",
 	password: "<BotPassword>",
 
-	/* Steam Guard code: set to 'authCode: null,' once the bot is verified */
+	/* Steam Guard code: set to 'authCode: null,' once the bot is verified or if you don't use SteamGuard */
 	authCode: "<SteamGuardCode>",
 
 

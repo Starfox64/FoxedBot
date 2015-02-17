@@ -146,7 +146,7 @@ server.on("connection", function (sock) {
 		if (data) {
 			if (data["1"] == Config.serverKey) {
 				if (data["3"] == "Event") {
-					if (eventEmitter.listeners(data["4"]).length > 0) {
+					if (app.eventEmitter.listeners(data["4"]).length > 0) {
 						app.eventEmitter.emit(data["4"], data["2"], data["5"])
 					} else {
 						console.log("Warning: " + sock.remoteAddress + " tried to trigger an unknown event! (" + data["4"] + ")");
