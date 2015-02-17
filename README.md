@@ -48,7 +48,7 @@ node app.js
 Thats it, FoxedBot is now running, forever, or not.  
   
 **Tip:**
-As FoxedBot is pretty new and was coded by a French cunt (thats me) it is likely to have bugs and may crash, it is recommanded that you run FoxedBot using [forever][7], a tool that will automatically restart FoxedBot if it crashes.
+As FoxedBot is pretty new and was coded by a French cunt (that's me) it is likely to have bugs and may crash, it is recommended that you run FoxedBot using [forever][7], a tool that will automatically restart FoxedBot if it crashes.
 
 Adding and removing users
 -------------------------
@@ -101,7 +101,7 @@ app.addCommand("CommandName", AdminOnly, function (steamID, name, args, strArgs)
 Type     | Description
 ---------|----------------------------------------------------------
 string   | The name of the command
-bool     | Weither or not the command is admin only
+bool     | Whether or not the command is admin only
 function | The function that will be called when the command is ran
 
 **Function Arguments**
