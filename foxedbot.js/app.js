@@ -1,9 +1,16 @@
 console.log("Loading FoxedBot...");
 
-var events = require( "events" );
+var events = require("events");
 var net = require("net");
-var Steam = require("steam");
-var Config = require("./config/settings.js");
+
+try {
+	var Config = require("./config/settings.js");
+	var Steam = require("steam");
+} catch (e) {
+	console.log(e.message);
+	process.exit(1);
+}
+
 var func = require("./lib/functions.js");
 
 var app = module.exports = {};

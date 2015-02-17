@@ -10,7 +10,6 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
   
 **Requirements**  
 >- [Node.js][3] (>= 0.12.0)
->- Git (Windows: [Git for Windows][4])
 >- SVN (Windows: [SlikSVN][5])
 >- [gm_bromsock][6]
 
@@ -25,7 +24,8 @@ npm install
 /* If you have issues on Linux use the following command */
 npm install --unsafe-perm
 ```
->- Open **config/settingg.js** with your favorite text editor
+>- Copy **config/settings.js.default** and change the file's name to **settings.js**
+>- Open **settings.js** with your favorite text editor
 >- Configure the SteamBot to suit your needs
 
 > **Garry's Mod Server**
@@ -209,7 +209,6 @@ Credits
 [1]:https://github.com/seishun "seishun"
 [2]:https://github.com/seishun/node-steam "node-steam"
 [3]:http://nodejs.org/ "Node.js"
-[4]:https://msysgit.github.io/ "Git for Windows"
 [5]:https://sliksvn.com/download/ "SlikSVN"
 [6]:http://facepunch.com/showthread.php?t=1393640 "gm_bromsock"
 [7]:https://github.com/foreverjs/forever "forever"
