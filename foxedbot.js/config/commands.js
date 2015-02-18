@@ -370,3 +370,18 @@ app.addCommand("unban", false, function (steamID, name, args) {
 		app.sendMessage(steamID, "You need to select a server first!");
 	}
 });
+
+app.addCommand("tell", true, function (steamID, name, args, strArgs) {
+var slicedArgs = Array.prototype.slice.call(args, 1);
+	for (var i in app.bot.friends) {
+		if (app.bot.friends[i] == app.Steam.EFriendRelationship.Friend) {
+			if (app.bot.users[i]) {
+				if (app.bot.users[i].playerName == args[0]) {
+				app.sendMessage(i, "[Message] " + name + ": " + slicedArgs.join(' '));
+				console.log(name + " sent " + app.bot.users[i].playerName + "(" + i + ")" + ": " + slicedArgs.join(' '));
+			} else {
+			}
+		}
+	}
+};
+});
