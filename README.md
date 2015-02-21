@@ -9,11 +9,13 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
 >- Easy to add commands
   
 **Requirements**  
->- [Node.js][3] (>= 0.12.0)
->- SVN (Windows: [SlikSVN][5])
+>- [Node.js][3] (**>= 0.12.0**)
+>- SVN (Windows: [SlikSVN][5] [**Nothing Else**]) (Linux: Get the **svn** or **subversion** package)
 >- [gm_bromsock][6]
 
 # FoxedBot Installation
+**Warning:** Do NOT install node-steam manually unless you know what you are doing the FoxedBot package will install it automatically, please review the result of `npm install` to make sure that the command was actually successful.
+
 > **SteamBot**
 >- Create a new Steam account for the SteamBot
 >- Add the SteamBot to your friend-list
@@ -36,7 +38,10 @@ npm install --unsafe-perm
 >- Configure FoxedBot to suit your needs  
 >- Add your server to the SteamBot's configuration file if you haven't already
   
-**Note:** Make sure to update your firewall's access rules!
+**Note:** Make sure to update your firewall's access rules!  
+**Tip:** The ServerPort variable isn't the source engine port (27015), it is a specific port that will receives message from the SteamBot.  
+2510X where X is the ServerID is a good way to avoid having the same port on two different servers.  
+**Tip:** You can get the ServerID of a server with it's order in the bot's configuration file. The first one is 0, second one is 1 and so on...
 
 # Usage
 Starting-up FoxedBot
