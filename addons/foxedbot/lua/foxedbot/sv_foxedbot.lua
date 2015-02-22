@@ -122,6 +122,8 @@ end
 --[[
 	Sends a <message> to <steamID> (SteamID64!).
 ]]--
+FoxedBot.client:SetCallbackSend(function() end)
+
 function FoxedBot.sendMessage( steamID, message )
 	if type(steamID) != "string" then
 		error("bad argument #1 to 'sendMessage' (string expected, got "..type(steamID)..")")
@@ -141,6 +143,13 @@ function FoxedBot.sendMessage( steamID, message )
 	local packet = BromPacket()
 	packet:WriteStringRaw(toSend)
 
+
+	if FoxedBot.client:GetState() != 7 then
+		FoxedBot.client:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
+	else
+		FoxedBot.client:Send(packet)
+	end
+	
 	FoxedBot.client:SetCallbackConnect(function( sockObj, ret, ip, port )
 		if not ret then
 			MsgC(Color(25, 200, 25), "[FoxedBot] Failed to connect to the SteamBot.\n")
