@@ -89,6 +89,7 @@ kickid         | Kicks a player using his UserID               | ```<UserID> [Re
 ban            | Bans a player using his name                  | ```<Name> [Minutes] [Reason]```          | **No**
 banid          | Bans a player using his SteamID (No SteamID64)| ```<SteamID> [Minutes] [Reason]```       | **No**
 unban          | Unbans a player using his SteamID             | ```<SteamID>```                          | **No**
+tell           | Sends a message to a friend of the SteamBot   | ```<Name> <Message>```                   | **No**
 
 # Developers
 _This section is for developers who which to add commands, callbacks and events._  
