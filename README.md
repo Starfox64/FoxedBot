@@ -209,7 +209,8 @@ Credits
 -------
 **seishun** - node-steam  
 **_FR_Starfox64** - FoxedBot  
-**Metamist** - Node.js Consultant ;)
+**Metamist** - Node.js Consultant ;)  
+**bromvlieg** - gm_bromsock
 
 [1]:https://github.com/seishun "seishun"
 [2]:https://github.com/seishun/node-steam "node-steam"

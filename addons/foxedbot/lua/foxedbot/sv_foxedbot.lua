@@ -5,6 +5,7 @@ util.AddNetworkString("FoxedBot_Announce")
 FoxedBot.callbacks = {}
 FoxedBot.sock = BromSock()
 FoxedBot.client = BromSock()
+FoxedBot.client:SetCallbackSend(function() end) -- Sets the client socket to non-blocking
 
 --[[
 	This callback is called whenever a TCP packet is received on port <FoxedBot.ServerPort>.
