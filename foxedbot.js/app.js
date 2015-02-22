@@ -26,6 +26,7 @@ app.Muted = {};
 
 var bot = app.bot; // Shortcut
 var server = net.createServer();
+server.on("error", function (e) {}); // Ignores TCP errors
 
 
 app.addCommand = function (commandName, admin, func) {
@@ -36,7 +37,7 @@ app.addCommand = function (commandName, admin, func) {
 	this.Commands[commandName] = data;
 }
 
-app.sendMessage = function(steamID, message) {
+app.sendMessage = function (steamID, message) {
 	if (this.Muted[steamID] != true && bot.users[steamID]) {
 		if (Config.sendOffline || bot.users[steamID].personaState != Steam.EPersonaState.Offline) {
 			bot.sendMessage(steamID, message, Steam.EChatEntryType.ChatMsg);
