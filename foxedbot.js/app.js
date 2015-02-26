@@ -87,6 +87,23 @@ bot.on("loggedOn", function() {
 	bot.setPersonaState(Steam.EPersonaState.Online);
 	bot.setPersonaName(Config.botName);
 	server.listen(Config.botPort); // Starts listening when the bot is connected to Steam.
+
+	/* Fetches data about offline friends (5 secs delay) */
+	setTimeout(function() {
+		var toFetch = [];
+
+		for (var i in app.bot.friends) {
+			if (bot.friends[i] == Steam.EFriendRelationship.Friend) {
+				if (!bot.users[i]) {
+					toFetch.push(i);
+				}
+			}
+		}
+
+		if (toFetch.length > 0) {
+			bot.requestFriendData(toFetch);
+		}
+	}, 5000);
 });
 
 /* Handles incoming messages */
