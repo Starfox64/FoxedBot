@@ -66,15 +66,17 @@ exports.sendToServer = function(serverID, callback, data) {
 		callback,
 		data
 	];
+	
+	var jsonString = JSON.stringify(jsonData);
 
-	var toSend = JSON.stringify(jsonData);
 	var client = new net.Socket();
-	var size = Buffer.byteLength(toSend);
-	var b1 = size & 0xff;
-	var b2 = (size>>>8) & 0xff;
-	var b3 = (size>>>16) & 0xff;
-	var b4 = (size>>>24) & 0xff;
-	var prefix = String.fromCharCode(b4, b3, b2, b1);
+
+	var buffer1 = new Buffer(4);
+	var buffer2 = new Buffer(jsonString);
+	
+	buffer1.writeUInt32LE(Buffer.byteLength(jsonString), 0);
+	var toSend = Buffer.concat([buffer1, buffer2]);
+	
 
 	client.setTimeout(3000, function () {
 		client.end();
@@ -86,6 +88,6 @@ exports.sendToServer = function(serverID, callback, data) {
 	});
 
 	client.connect(Config.servers[serverID].port, Config.servers[serverID].ip, function () {
-		client.write(prefix + toSend);
+		client.write(toSend);
 	});
 }
