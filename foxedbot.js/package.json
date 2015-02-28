@@ -8,11 +8,8 @@
   	"url": "https://github.com/Starfox64/FoxedBot/trunk/foxedbot.js"
   },
   "private": true,
-  "scripts": {
-    "postinstall": "cd ./node_modules/steam && npm install"
-  },
   "dependencies": {
-    "steam": "https://github.com/seishun/node-steam/tarball/master"
+    "steam": "0.6.8"
   },
   "engines": {
     "node": ">=0.12"
