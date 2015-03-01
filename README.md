@@ -12,6 +12,7 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
 >- [Node.js][3] (**>= 0.12.0**)
 >- SVN (Windows: [SlikSVN][5] [**Nothing Else**]) (Linux: Get the **svn** or **subversion** package)
 >- [gm_bromsock][6]
+>- Windows: [Visual C++ Redistributable Packages for Visual Studio 2013][9]
 
 # FoxedBot Installation
 **Warning:** Do NOT install node-steam manually unless you know what you are doing, the FoxedBot package will install it automatically. please review the result of `npm install` to make sure that the command was actually successful.
@@ -220,3 +221,4 @@ Credits
 [6]:http://facepunch.com/showthread.php?t=1393640 "gm_bromsock"
 [7]:https://github.com/foreverjs/forever "forever"
 [8]:https://github.com/Starfox64/FoxedBot/issues "issues"
+[9]:http://www.microsoft.com/en-us/download/details.aspx?id=40784 "Visual C++ Redistributable Packages for Visual Studio 2013"

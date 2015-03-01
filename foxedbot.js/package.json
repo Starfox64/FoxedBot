@@ -9,7 +9,8 @@
   },
   "private": true,
   "dependencies": {
-    "steam": "0.6.8"
+    "steam": "0.6.8",
+    "log4js": "0.6.22"
   },
   "engines": {
     "node": ">=0.12"

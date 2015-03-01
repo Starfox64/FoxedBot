@@ -1,7 +1,21 @@
+var fs = require("fs");
 var net = require("net");
 var Config = require("../config/settings.js");
+var app = require("../app.js");
+
 var exports = module.exports = {};
 
+
+exports.getLogFile = function () {
+	var date = new Date();
+	var logFile = "./logs/" + date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate() + "_" + date.getHours() + "-" + date.getMinutes() + "-" + date.getSeconds() + ".log";
+
+	if (!fs.existsSync("./logs")) {
+		fs.mkdirSync("./logs");
+	}
+
+	return logFile;
+}
 
 exports.isAdmin = function(steamID) {
 	var isAdmin = false;
@@ -66,17 +80,17 @@ exports.sendToServer = function(serverID, callback, data) {
 		callback,
 		data
 	];
-	
+
 	var jsonString = JSON.stringify(jsonData);
 
 	var client = new net.Socket();
 
 	var buffer1 = new Buffer(4);
 	var buffer2 = new Buffer(jsonString);
-	
+
 	buffer1.writeUInt32LE(Buffer.byteLength(jsonString), 0);
 	var toSend = Buffer.concat([buffer1, buffer2]);
-	
+
 
 	client.setTimeout(3000, function () {
 		client.end();
@@ -84,7 +98,7 @@ exports.sendToServer = function(serverID, callback, data) {
 	});
 
 	client.on("error", function (err) {
-		console.log("An error occured while trying to send data to server " + serverID + ".");
+		app.logger.error("An error occured while trying to send data to server " + serverID + ".");
 	});
 
 	client.connect(Config.servers[serverID].port, Config.servers[serverID].ip, function () {

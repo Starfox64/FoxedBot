@@ -16,9 +16,12 @@ module.exports = {
 	/* The port that the SteamBot will listen on */
 	botPort: 25000,
 
+	
+	/* The level of logging (TRACE/DEBUG/INFO/WARN/ERROR/FATAL) */
+	logLevel: "INFO",
 
-	/* Echo incoming message to the console */
-	showChat: true,
+	/* Log ALL chat message (Not recommended unless debugging) */
+	logChat: false,
 
 	/* Sends messages even if the target is offline */
 	sendOffline: false,

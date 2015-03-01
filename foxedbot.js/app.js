@@ -1,33 +1,42 @@
 console.log("Loading FoxedBot...");
 
-var events = require("events");
-var net = require("net");
+var app = module.exports = {};
 
+/* Modules */
 try {
 	var Config = require("./config/settings.js");
 	var Steam = require("steam");
+	var log4js = require("log4js");
 } catch (e) {
 	console.log(e.message);
 	process.exit(1);
 }
 
+var events = require("events");
+var net = require("net");
 var func = require("./lib/functions.js");
 
-var app = module.exports = {};
 
-/* SHARED */
+/* log4js */
+log4js.configure({
+	appenders: [
+		{type: "console"},
+		{type: "file", filename: func.getLogFile(), category: "LOG"}
+	]
+});
+
+
+/* Shared Objects */
 app.eventEmitter = new events.EventEmitter();
 app.bot = new Steam.SteamClient();
+app.logger = log4js.getLogger("LOG");
+app.logger.setLevel(Config.logLevel);
+app.server = net.createServer();
 app.Steam = Steam;
 app.Commands = {};
 app.Selected = {};
 app.Listening = {};
 app.Muted = {};
-
-var bot = app.bot; // Shortcut
-var server = net.createServer();
-server.on("error", function (e) {}); // Ignores TCP errors
-
 
 app.addCommand = function (commandName, admin, func) {
 	var data = {
@@ -38,81 +47,88 @@ app.addCommand = function (commandName, admin, func) {
 }
 
 app.sendMessage = function (steamID, message) {
-	if (this.Muted[steamID] != true && bot.users[steamID]) {
-		if (Config.sendOffline || bot.users[steamID].personaState != Steam.EPersonaState.Offline) {
-			bot.sendMessage(steamID, message, Steam.EChatEntryType.ChatMsg);
+	if (this.Muted[steamID] != true && app.bot.users[steamID]) {
+		if (Config.sendOffline || app.bot.users[steamID].personaState != Steam.EPersonaState.Offline) {
+			app.bot.sendMessage(steamID, message, Steam.EChatEntryType.ChatMsg);
+			app.logger.debug("FoxedBot -> " + steamID + ": " + message);
 		}
 	}
 }
 
+
+/* Loads Commands & Events */
 require("./config/events.js");
 require("./config/commands.js");
 
 
-bot.logOn({
+/* SteamBot */
+app.bot.logOn({
 	accountName: Config.accountName,
 	password: Config.password,
 	authCode: Config.authCode
 });
 
-bot.on("error", function (e) {
+app.bot.on("error", function (e) {
+	var reason = "Unknown";
+	for (var i in Steam.EResult) {
+		if (Steam.EResult[i] == e.eresult) {
+			reason = i;
+			break;
+		}
+	}
+
 	switch (e.cause) {
 		case "logonFail":
-			var reason = "Unknown";
-			for (var i in Steam.EResult) {
-				if (Steam.EResult[i] == e.eresult) {
-					reason = i;
-					break;
-				}
-			}
-			console.log("FoxedBot failed to login! Reason: " + reason);
+			app.logger.fatal("FoxedBot failed to login! Reason: " + reason);
 			break;
 		case "loggedOff":
-			var reason = "Unknown";
-			for (var i in Steam.EResult) {
-				if (Steam.EResult[i] == e.eresult) {
-					reason = i;
-					break;
-				}
-			}
-			console.log("FoxedBot was logged-off! Reason: " + reason);
+			app.logger.warn("FoxedBot was logged-off! Reason: " + reason);
+
+			setTimeout(function () {
+				app.logger.info("Reconnecting to Steam...");
+				app.bot.logOn({
+					accountName: Config.accountName,
+					password: Config.password,
+					authCode: Config.authCode
+				});
+			}, 5000);
 			break;
 		default:
-			console.log("FoxedBot encountered a fatal error and must shutdown!");
+			app.logger.fatal("FoxedBot encountered a fatal error and must shutdown!");
 	}
 });
 
-bot.on("loggedOn", function() {
-	console.log("Logged in as " + Config.accountName + "!");
-	bot.setPersonaState(Steam.EPersonaState.Online);
-	bot.setPersonaName(Config.botName);
-	server.listen(Config.botPort); // Starts listening when the bot is connected to Steam.
+app.bot.on("loggedOn", function() {
+	app.logger.info("Logged in as " + Config.accountName + "!");
+	app.bot.setPersonaState(Steam.EPersonaState.Online);
+	app.bot.setPersonaName(Config.botName);
+	app.server.listen(Config.botPort); // Starts listening when the bot is connected to Steam.
 
 	/* Fetches data about offline friends (5 secs delay) */
 	setTimeout(function() {
 		var toFetch = [];
 
 		for (var i in app.bot.friends) {
-			if (bot.friends[i] == Steam.EFriendRelationship.Friend) {
-				if (!bot.users[i]) {
+			if (app.bot.friends[i] == Steam.EFriendRelationship.Friend) {
+				if (!app.bot.users[i]) {
 					toFetch.push(i);
 				}
 			}
 		}
 
 		if (toFetch.length > 0) {
-			bot.requestFriendData(toFetch);
+			app.logger.debug("Running requestFriendData()...");
+			app.bot.requestFriendData(toFetch);
 		}
 	}, 5000);
 });
 
-/* Handles incoming messages */
-bot.on("friendMsg", function (source, message) {
-	if (bot.friends[source] == Steam.EFriendRelationship.Friend) { // Checks if the source is a friend.
-		var name = bot.users[source].playerName;
+app.bot.on("friendMsg", function (source, message) {
+	if (app.bot.friends[source] == Steam.EFriendRelationship.Friend) { // Checks if the source is a friend.
+		var name = app.bot.users[source].playerName;
 		if (message != "") {
-			if (Config.showChat) {
-				console.log(name + ": " + message); // Echoes the message to the console if enabled.
+			if (Config.logChat) {
+				app.logger.info(name + ": " + message); // Logs the message if enabled.
 			}
 			if (message.substring(0, 1) == Config.commandChar) { // checks if the first character is the command character (!).
 				var length = 0;
@@ -133,32 +149,40 @@ bot.on("friendMsg", function (source, message) {
 							app.Commands[command].func(source, name, func.parseArguments(message.slice(command.length + 1)), message.slice(command.length + 1)); // Parses the command's arguments and runs the commands function.
 						} else {
 							app.sendMessage(source, "Access Denied!");
+							app.logger.info(name + " [" + source + "] tried to run an Admin Only command. (" + command + ")");
 						}
 						return;
 					}
 				}
 				app.sendMessage(source, "Command not found.");
+				app.logger.debug(name + " [" + source + "] tried to run an unknown command. (" + message.toLowerCase().substring(1, length) + ")");
 			}
 		}
 	}
+	app.logger.debug(source + " isn't a friend and is sending messages to FoxedBot.");
 });
 
-/* Makes sure peoples that aren't friends can't listen */
-bot.on("friend", function (steamID, status) {
-	if (status != Steam.EFriendRelationship.Friend) {
+app.bot.on("friend", function (steamID, status) {
+	if (status != Steam.EFriendRelationship.Friend) { // Removes non-friends from the listening list.
 		if (app.Listening[steamID]) {
 			app.Listening[steamID] = null;
+			app.logger.debug("Removing " + steamID + " from the listening list.");
 		}
 	}
 });
 
-server.on("listening", function () {
-	var address = server.address();
-	console.log("FoxedBot is now listening on port " + address.port + ".");
+
+/* TCP Server */
+app.server.on("error", function (e) {
+	app.logger.error("TCP Server Error: " + e.message);
 });
 
-/* Handles incoming data */
-server.on("connection", function (sock) {
+app.server.on("listening", function () {
+	var address = app.server.address();
+	app.logger.info("FoxedBot is now listening on port " + address.port + ".");
+});
+
+app.server.on("connection", function (sock) {
 	sock.on("data", function (packet) {
 		var data;
 		try {
@@ -167,20 +191,22 @@ server.on("connection", function (sock) {
 			} else {
 				data = JSON.parse(packet.toString());
 			}
-		} catch (e) {}
+		} catch (e) {
+			app.logger.warn(sock.remoteAddress + " send an invalid JSON packet!");
+		}
 		if (data) {
 			if (data["1"] == Config.serverKey) {
 				if (data["3"] == "Event") {
 					if (app.eventEmitter.listeners(data["4"]).length > 0) {
 						app.eventEmitter.emit(data["4"], data["2"], data["5"])
 					} else {
-						console.log("Warning: " + sock.remoteAddress + " tried to trigger an unknown event! (" + data["4"] + ")");
+						app.logger.warn(sock.remoteAddress + " tried to trigger an unknown event! (" + data["4"] + ")");
 					}
 				} else {
 					app.sendMessage(data["4"], data["5"]);
 				}
 			} else {
-				console.log("Warning: " + sock.remoteAddress + " tried to connect with the wrong ServerKey!");
+				app.logger.warn(sock.remoteAddress + " tried to connect with the wrong ServerKey!");
 			}
 		}
 	});

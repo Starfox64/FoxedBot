@@ -9,6 +9,7 @@ events.on("OnChat", function (serverID, data) {
 			}
 		}
 	}
+	app.logger.debug("Server " + serverID + " -> Event: OnChat");
 });
 
 events.on("OnLog", function (serverID, data) {
@@ -19,6 +20,7 @@ events.on("OnLog", function (serverID, data) {
 			}
 		}
 	}
+	app.logger.debug("Server " + serverID + " -> Event: OnLog");
 });
 
 events.on("OnAdminCall", function (serverID, data) {
@@ -27,4 +29,5 @@ events.on("OnAdminCall", function (serverID, data) {
 			app.sendMessage(i, "[Admin Call - Server " + serverID + "] " + data.name + ": " + data.text);
 		}
 	}
+	app.logger.debug("Server " + serverID + " -> Event: OnAdminCall");
 });
