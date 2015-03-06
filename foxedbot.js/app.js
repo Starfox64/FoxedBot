@@ -158,6 +158,7 @@ app.bot.on("friendMsg", function (source, message) {
 				app.logger.debug(name + " [" + source + "] tried to run an unknown command. (" + message.toLowerCase().substring(1, length) + ")");
 			}
 		}
+		return;
 	}
 	app.logger.debug(source + " isn't a friend and is sending messages to FoxedBot.");
 });
