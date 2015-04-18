@@ -7,6 +7,7 @@ try {
 	var Config = require("./config/settings.js");
 	var Steam = require("steam");
 	var log4js = require("log4js");
+	var fs = require("fs");
 } catch (e) {
 	console.log(e.message);
 	process.exit(1);
@@ -60,13 +61,38 @@ app.sendMessage = function (steamID, message) {
 require("./config/events.js");
 require("./config/commands.js");
 
+/* Load variables from config */
+var accname = Config.accountName;
+var pass = Config.password;
+var sentry = null;
+var auth = null;
+if (fs.existsSync(Config.sentryfile)) {
+	app.logger.info('Reading sentry file for hash')
+	sentry = fs.readFileSync(Config.sentryfile);
+} else if (Config.authCode != "") {
+	sentry = null;
+	auth = Config.authCode;
+	app.logger.info('Couldn`t find sentry hash, will use Steam Guard authenticiation code instead.');
+} else {
+	auth = null;
+	sentry = null;
+	app.logger.warn('Found no sentry hash nor authcode. Login will likely fail!');
+};
 
 /* SteamBot */
-app.bot.logOn({
-	accountName: Config.accountName,
-	password: Config.password,
-	authCode: Config.authCode
-});
+if(sentry) {
+	app.bot.logOn({
+		accountName: accname,
+		password: pass,
+		shaSentryfile: sentry
+	});
+} else {
+	app.bot.logOn({
+		accountName: accname,
+		password: pass,
+		authCode: auth
+	});
+}
 
 app.bot.on("error", function (e) {
 	var reason = "Unknown";
@@ -86,11 +112,19 @@ app.bot.on("error", function (e) {
 
 			setTimeout(function () {
 				app.logger.info("Reconnecting to Steam...");
-				app.bot.logOn({
-					accountName: Config.accountName,
-					password: Config.password,
-					authCode: Config.authCode
-				});
+				if(sentry) {
+					app.bot.logOn({
+						accountName: accname,
+						password: pass,
+						shaSentryfile: sentry
+					});
+				} else {
+					app.bot.logOn({
+						accountName: accname,
+						password: pass,
+						authCode: auth
+					});
+				}
 			}, 5000);
 			break;
 		default:
@@ -172,6 +206,16 @@ app.bot.on("friend", function (steamID, status) {
 	}
 });
 
+app.bot.on('sentry', function(buffer) {
+	app.logger.info("Received sentry event");
+	fs.writeFile(Config.sentryfile, bugger, function(err) {
+		if(err){
+			app.logger.info("Failed to save sentry hash: " + err);
+		} else {
+			app.logger.info("Successfully saved sentry hash.");
+		}
+	});
+});
 
 /* TCP Server */
 app.server.on("error", function (e) {
