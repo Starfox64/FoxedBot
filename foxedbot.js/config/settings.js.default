@@ -9,7 +9,7 @@ module.exports = {
 	/* Steam Guard code: set to 'authCode: null,' once the bot is verified or if you don't use SteamGuard */
 	authCode: "<SteamGuardCode>",
 	/* Enter location for ShaSentryFile */
-	sentryfile: "<SentryFileLocation>",
+	sentryfile: "./config/shasentry.bin",
 
 	/* The ServerKey of the SteamBot */
 	serverKey: "ChangeMe!",
