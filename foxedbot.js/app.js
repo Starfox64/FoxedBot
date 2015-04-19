@@ -80,7 +80,7 @@ if (fs.existsSync(Config.sentryfile)) {
 };
 
 /* SteamBot */
-if(sentry) {
+if (sentry) {
 	app.bot.logOn({
 		accountName: accname,
 		password: pass,
@@ -112,7 +112,7 @@ app.bot.on("error", function (e) {
 
 			setTimeout(function () {
 				app.logger.info("Reconnecting to Steam...");
-				if(sentry) {
+				if (sentry) {
 					app.bot.logOn({
 						accountName: accname,
 						password: pass,
@@ -208,8 +208,8 @@ app.bot.on("friend", function (steamID, status) {
 
 app.bot.on('sentry', function(buffer) {
 	app.logger.info("Received sentry event");
-	fs.writeFile(Config.sentryfile, bugger, function(err) {
-		if(err){
+	fs.writeFile(Config.sentryfile, buffer, function(err) {
+		if (err) {
 			app.logger.info("Failed to save sentry hash: " + err);
 		} else {
 			app.logger.info("Successfully saved sentry hash.");
