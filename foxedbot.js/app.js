@@ -14,6 +14,8 @@ try {
 
 var events = require("events");
 var net = require("net");
+var fs = require("fs");
+var readline = require("readline");
 var func = require("./lib/functions.js");
 
 
@@ -23,6 +25,12 @@ log4js.configure({
 		{type: "console"},
 		{type: "file", filename: func.getLogFile(), category: "LOG"}
 	]
+});
+
+/* readline */
+var rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout
 });
 
 
@@ -60,13 +68,37 @@ app.sendMessage = function (steamID, message) {
 require("./config/events.js");
 require("./config/commands.js");
 
+/* Load variables from config */
+var sentryHash;
+
+if (fs.existsSync(Config.sentryfile)) {
+	app.logger.info("Sentry hash found, reading...")
+	sentryHash = fs.readFileSync(Config.sentryfile);
+}
 
 /* SteamBot */
-app.bot.logOn({
-	accountName: Config.accountName,
-	password: Config.password,
-	authCode: Config.authCode
-});
+function botLogOn (sentry, code) {
+	if (sentry) {
+		app.bot.logOn({
+			accountName: Config.accountName,
+			password: Config.password,
+			shaSentryfile: sentry
+		});
+	} else if (code) {
+		app.bot.logOn({
+			accountName: Config.accountName,
+			password: Config.password,
+			authCode: code
+		});
+	} else {
+		app.bot.logOn({
+			accountName: Config.accountName,
+			password: Config.password
+		});
+	}
+}
+
+botLogOn(sentryHash);
 
 app.bot.on("error", function (e) {
 	var reason = "Unknown";
@@ -79,23 +111,35 @@ app.bot.on("error", function (e) {
 
 	switch (e.cause) {
 		case "logonFail":
-			app.logger.fatal("FoxedBot failed to login! Reason: " + reason);
+			app.logger.warn("FoxedBot failed to login! Reason: " + reason);
+
+			if (e.eresult == Steam.EResult.AccountLogonDenied) {
+				rl.question("Steam Guard code required: ", function(code) {
+					botLogOn(null, code);
+				});
+			}
 			break;
 		case "loggedOff":
 			app.logger.warn("FoxedBot was logged-off! Reason: " + reason);
 
 			setTimeout(function () {
 				app.logger.info("Reconnecting to Steam...");
-				app.bot.logOn({
-					accountName: Config.accountName,
-					password: Config.password,
-					authCode: Config.authCode
-				});
+				botLogOn(sentryHash);
 			}, 5000);
 			break;
 		default:
 			app.logger.fatal("FoxedBot encountered a fatal error and must shutdown!");
 	}
+});
+
+app.bot.on('sentry', function(buffer) {
+	fs.writeFile(Config.sentryfile, buffer, function(err) {
+		if (err) {
+			app.logger.error("Failed to save sentry hash: " + err);
+		} else {
+			app.logger.info("Successfully saved sentry hash.");
+		}
+	});
 });
 
 app.bot.on("loggedOn", function() {
@@ -171,7 +215,6 @@ app.bot.on("friend", function (steamID, status) {
 		}
 	}
 });
-
 
 /* TCP Server */
 app.server.on("error", function (e) {
