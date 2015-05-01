@@ -6,11 +6,9 @@ module.exports = {
 	accountName: "<BotUsername>",
 	password: "<BotPassword>",
 
-	/* Steam Guard code: set to 'authCode: null,' once the bot is verified or if you don't use SteamGuard */
-	authCode: "<SteamGuardCode>",
-
 	/* Enter location for ShaSentryFile */
 	sentryfile: "./config/shasentry.bin",
+
 
 	/* The ServerKey of the SteamBot */
 	serverKey: "ChangeMe!",
@@ -18,7 +16,7 @@ module.exports = {
 	/* The port that the SteamBot will listen on */
 	botPort: 25000,
 
-	
+
 	/* The level of logging (TRACE/DEBUG/INFO/WARN/ERROR/FATAL) */
 	logLevel: "INFO",
 

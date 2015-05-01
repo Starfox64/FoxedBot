@@ -7,7 +7,6 @@ try {
 	var Config = require("./config/settings.js");
 	var Steam = require("steam");
 	var log4js = require("log4js");
-	var fs = require("fs");
 } catch (e) {
 	console.log(e.message);
 	process.exit(1);
@@ -15,6 +14,8 @@ try {
 
 var events = require("events");
 var net = require("net");
+var fs = require("fs");
+var readline = require("readline");
 var func = require("./lib/functions.js");
 
 
@@ -24,6 +25,12 @@ log4js.configure({
 		{type: "console"},
 		{type: "file", filename: func.getLogFile(), category: "LOG"}
 	]
+});
+
+/* readline */
+var rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout
 });
 
 
@@ -62,37 +69,36 @@ require("./config/events.js");
 require("./config/commands.js");
 
 /* Load variables from config */
-var accname = Config.accountName;
-var pass = Config.password;
-var sentry = null;
-var auth = null;
+var sentryHash;
+
 if (fs.existsSync(Config.sentryfile)) {
-	app.logger.info('Reading sentry file for hash')
-	sentry = fs.readFileSync(Config.sentryfile);
-} else if (Config.authCode != "") {
-	sentry = null;
-	auth = Config.authCode;
-	app.logger.info('Couldn`t find sentry hash, will use Steam Guard authenticiation code instead.');
-} else {
-	auth = null;
-	sentry = null;
-	app.logger.warn('Found no sentry hash nor authcode. Login will likely fail!');
-};
+	app.logger.info("Sentry hash found, reading...")
+	sentryHash = fs.readFileSync(Config.sentryfile);
+}
 
 /* SteamBot */
-if (sentry) {
-	app.bot.logOn({
-		accountName: accname,
-		password: pass,
-		shaSentryfile: sentry
-	});
-} else {
-	app.bot.logOn({
-		accountName: accname,
-		password: pass,
-		authCode: auth
-	});
+function botLogOn (sentry, code) {
+	if (sentry) {
+		app.bot.logOn({
+			accountName: Config.accountName,
+			password: Config.password,
+			shaSentryfile: sentry
+		});
+	} else if (code) {
+		app.bot.logOn({
+			accountName: Config.accountName,
+			password: Config.password,
+			authCode: code
+		});
+	} else {
+		app.bot.logOn({
+			accountName: Config.accountName,
+			password: Config.password
+		});
+	}
 }
+
+botLogOn(sentryHash);
 
 app.bot.on("error", function (e) {
 	var reason = "Unknown";
@@ -105,31 +111,35 @@ app.bot.on("error", function (e) {
 
 	switch (e.cause) {
 		case "logonFail":
-			app.logger.fatal("FoxedBot failed to login! Reason: " + reason);
+			app.logger.warn("FoxedBot failed to login! Reason: " + reason);
+
+			if (e.eresult == Steam.EResult.AccountLogonDenied) {
+				rl.question("Steam Guard code required: ", function(code) {
+					botLogOn(null, code);
+				});
+			}
 			break;
 		case "loggedOff":
 			app.logger.warn("FoxedBot was logged-off! Reason: " + reason);
 
 			setTimeout(function () {
 				app.logger.info("Reconnecting to Steam...");
-				if (sentry) {
-					app.bot.logOn({
-						accountName: accname,
-						password: pass,
-						shaSentryfile: sentry
-					});
-				} else {
-					app.bot.logOn({
-						accountName: accname,
-						password: pass,
-						authCode: auth
-					});
-				}
+				botLogOn(sentryHash);
 			}, 5000);
 			break;
 		default:
 			app.logger.fatal("FoxedBot encountered a fatal error and must shutdown!");
 	}
+});
+
+app.bot.on('sentry', function(buffer) {
+	fs.writeFile(Config.sentryfile, buffer, function(err) {
+		if (err) {
+			app.logger.error("Failed to save sentry hash: " + err);
+		} else {
+			app.logger.info("Successfully saved sentry hash.");
+		}
+	});
 });
 
 app.bot.on("loggedOn", function() {
@@ -204,17 +214,6 @@ app.bot.on("friend", function (steamID, status) {
 			app.logger.debug("Removing " + steamID + " from the listening list.");
 		}
 	}
-});
-
-app.bot.on('sentry', function(buffer) {
-	app.logger.info("Received sentry event");
-	fs.writeFile(Config.sentryfile, buffer, function(err) {
-		if (err) {
-			app.logger.info("Failed to save sentry hash: " + err);
-		} else {
-			app.logger.info("Successfully saved sentry hash.");
-		}
-	});
 });
 
 /* TCP Server */
