@@ -135,9 +135,9 @@ app.bot.on("error", function (e) {
 app.bot.on('sentry', function(buffer) {
 	fs.writeFile(Config.sentryfile, buffer, function(err) {
 		if (err) {
-			app.logger.error("Failed to save sentry hash: " + err);
+			app.logger.error("Failed to save the sentry hash: " + err.message);
 		} else {
-			app.logger.info("Successfully saved sentry hash.");
+			app.logger.info("Successfully saved the sentry hash.");
 		}
 	});
 });
@@ -148,7 +148,7 @@ app.bot.on("loggedOn", function() {
 	app.bot.setPersonaName(Config.botName);
 	app.server.listen(Config.botPort); // Starts listening when the bot is connected to Steam.
 
-	/* Fetches data about offline friends (5 secs delay) */
+	/* Fetches data about offline friends (1 secs delay) */
 	setTimeout(function() {
 		var toFetch = [];
 
@@ -164,46 +164,45 @@ app.bot.on("loggedOn", function() {
 			app.logger.debug("Running requestFriendData()...");
 			app.bot.requestFriendData(toFetch);
 		}
-	}, 5000);
+	}, 1000);
 });
 
 app.bot.on("friendMsg", function (source, message) {
 	if (app.bot.friends[source] == Steam.EFriendRelationship.Friend) { // Checks if the source is a friend.
+		if (!app.bot.users[source]) { // Cancels the command and runs requestFriendData on source if source is unknown.
+			app.sendMessage(source, "Error, please try again later.");
+			app.logger.info("Unknown Friend [" + source + "], requesting friend data...");
+			app.bot.requestFriendData([source]);
+			return;
+		}
+
 		var name = app.bot.users[source].playerName;
+
 		if (message != "") {
 			if (Config.logChat) {
 				app.logger.info(name + ": " + message); // Logs the message if enabled.
 			}
-			if (message.substring(0, 1) == Config.commandChar) { // checks if the first character is the command character (!).
-				var length = 0;
-				for (var i in message) { // This loop gets the length of the entered command.
-					if (message[i] == " ") {
-						length = i;
-						break;
-					}
-				}
 
-				if (length == 0) {
-					length = message.length;
-				}
-
-				for (var command in app.Commands) { // Looks for the command in the commands array.
-					if (message.toLowerCase().substring(1, length) == command.toLowerCase()) {
-						if (!app.Commands[command].admin || func.isAdmin(source)) { // Checks if the command requires admin rights.
-							app.Commands[command].func(source, name, func.parseArguments(message.slice(command.length + 1)), message.slice(command.length + 1)); // Parses the command's arguments and runs the commands function.
-						} else {
-							app.sendMessage(source, "Access Denied!");
-							app.logger.info(name + " [" + source + "] tried to run an Admin Only command. (" + command + ")");
-						}
-						return;
+			for (var command in app.Commands) { // Looks for the command in the commands array.
+				if (message.toLowerCase().startsWith(command.toLowerCase())) {
+					if (!app.Commands[command].admin || func.isAdmin(source)) { // Checks if the command requires admin rights.
+						var arguments = message.slice(command.length).trim();
+						app.Commands[command].func(source, name, func.parseArguments(arguments), arguments); // Parses the command's arguments and runs the commands function.
+					} else {
+						app.sendMessage(source, "Access Denied!");
+						app.logger.info(name + " [" + source + "] tried to run an Admin Only command. (" + command + ")");
 					}
+					return;
 				}
-				app.sendMessage(source, "Command not found.");
-				app.logger.debug(name + " [" + source + "] tried to run an unknown command. (" + message.toLowerCase().substring(1, length) + ")");
 			}
+
+			app.sendMessage(source, "Command not found.");
+			app.logger.debug(name + " [" + source + "] tried to run an unknown command. (" + message.toLowerCase().substring(1, length) + ")");
 		}
+
 		return;
 	}
+
 	app.logger.debug(source + " isn't a friend and is sending messages to FoxedBot.");
 });
 
@@ -229,6 +228,7 @@ app.server.on("listening", function () {
 app.server.on("connection", function (sock) {
 	sock.on("data", function (packet) {
 		var data;
+
 		try {
 			if (packet.toString()[0] != "{") {
 				data = JSON.parse(packet.toString().substring(4)); // Removes the 4 first characters if the first one isn't '{'
@@ -238,6 +238,7 @@ app.server.on("connection", function (sock) {
 		} catch (e) {
 			app.logger.warn(sock.remoteAddress + " send an invalid JSON packet!");
 		}
+
 		if (data) {
 			if (data["1"] == Config.serverKey) {
 				if (data["3"] == "Event") {

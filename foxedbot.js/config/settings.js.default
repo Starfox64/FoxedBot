@@ -26,9 +26,6 @@ module.exports = {
 	/* Sends messages even if the target is offline */
 	sendOffline: false,
 
-	/* The character that will be used to parse commands */
-	commandChar: "!",
-
 	/* Which SteamID64 are superadmins */
 	admins: [
 		"76561198035539471", // _FR_Starfox64 (Change us)

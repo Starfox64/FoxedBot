@@ -30,48 +30,43 @@ exports.isAdmin = function(steamID) {
 	return isAdmin;
 }
 
-exports.parseArguments = function(toParse) {
-	var work = [];
-	var quote = false;
-	var writing = false;
-	var arg = 0;
+// Originally made in Lua by Chessnut for Nutscript, available under the MIT license.
+exports.parseArguments = function(text) {
+	var skip = -1
+	var args = []
+	var curString = ""
 
-	for (var i = 0; i < toParse.length; i++) {
-		if (quote && !writing) {
-			if (toParse[i] == quote) {
-				quote = false;
-				arg++;
+	for (var i = 0; i < text.length; i++) {
+		if (i <= skip) {continue}
+
+		var c = text.slice(i, i + 1)
+
+		if (c === "\"" || c === "'") {
+			var regex = new RegExp(c + "(.*?)" + c)
+			var match = text.slice(i).match(regex)
+
+			if (match) {
+				match = match[1]
+				curString = ""
+				skip = i + match.length + 1
+				args.push(match)
 			} else {
-				work[arg] = work[arg] + toParse[i];
-				continue;
+				curString = curString + c
 			}
+		} else if (c === " " && curString !== "") {
+			args.push(curString)
+			curString = ""
 		} else {
-			if (!writing) {
-				if (toParse[i] == "\"" || toParse[i] == "'") {
-					quote = toParse[i];
-					work[arg] = "";
-					continue;
-				}
-			}
-		}
-		if (writing) {
-			if (toParse[i] == " ") {
-				writing = false;
-				arg++;
-			} else {
-				work[arg] = work[arg] + toParse[i];
-				continue;
-			}
-		}
-		if (!writing && !quote) {
-			if (toParse[i] == " " && toParse[i + 1] != " " && toParse[i + 1] != "\"" && toParse[i + 1] != "'") {
-				writing = true;
-				work[arg] = "";
-			}
+			if (c === " " && curString === "") {continue}
+			curString = curString + c
 		}
 	}
 
-	return work;
+	if (curString !== "") {
+		args.push(curString)
+	}
+
+	return args
 }
 
 exports.sendToServer = function(serverID, callback, data) {
