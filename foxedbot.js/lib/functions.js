@@ -32,71 +32,65 @@ exports.isAdmin = function(steamID) {
 
 // Originally made in Lua by Chessnut for Nutscript, available under the MIT license.
 exports.parseArguments = function(text) {
-	var skip = -1
-	var args = []
-	var curString = ""
+	var skip = -1;
+	var args = [];
+	var curString = "";
 
 	for (var i = 0; i < text.length; i++) {
 		if (i <= skip) {continue}
 
-		var c = text.slice(i, i + 1)
+		var c = text.slice(i, i + 1);
 
 		if (c === "\"" || c === "'") {
-			var regex = new RegExp(c + "(.*?)" + c)
-			var match = text.slice(i).match(regex)
+			var regex = new RegExp(c + "(.*?)" + c);
+			var match = text.slice(i).match(regex);
 
 			if (match) {
-				match = match[1]
-				curString = ""
-				skip = i + match.length + 1
-				args.push(match)
+				match = match[1];
+				curString = "";
+				skip = i + match.length + 1;
+				args.push(match);
 			} else {
-				curString = curString + c
+				curString = curString + c;
 			}
 		} else if (c === " " && curString !== "") {
-			args.push(curString)
-			curString = ""
+			args.push(curString);
+			curString = "";
 		} else {
 			if (c === " " && curString === "") {continue}
-			curString = curString + c
+			curString = curString + c;
 		}
 	}
 
 	if (curString !== "") {
-		args.push(curString)
+		args.push(curString);
 	}
 
-	return args
+	return args;
+}
+
+exports.sendToSocket = function (sock, data) {
+	var buff = new Buffer(data);
+	var EOT = new Buffer("\3"); // Adds an EndOfText control character at the end of every packets.
+
+	sock.write(Buffer.concat([buff, EOT]));
 }
 
 exports.sendToServer = function(serverID, callback, data) {
+	if (!app.Socks[serverID]) {
+		app.logger.warn("Cannot send message to Server " + serverID + ", server not connected.");
+		return false;
+	}
+
+	var sock = app.Socks[serverID];
+
 	var jsonData = [
-		Config.serverKey,
 		callback,
 		data
 	];
 
 	var jsonString = JSON.stringify(jsonData);
+	exports.sendToSocket(sock, jsonString);
 
-	var client = new net.Socket();
-
-	var buffer1 = new Buffer(4);
-	var buffer2 = new Buffer(jsonString);
-
-	buffer1.writeUInt32LE(Buffer.byteLength(jsonString), 0);
-	var toSend = Buffer.concat([buffer1, buffer2]);
-
-
-	client.setTimeout(3000, function () {
-		client.end();
-		client.destroy();
-	});
-
-	client.on("error", function (err) {
-		app.logger.error("An error occured while trying to send data to server " + serverID + ".");
-	});
-
-	client.connect(Config.servers[serverID].port, Config.servers[serverID].ip, function () {
-		client.write(toSend);
-	});
+	return true;
 }

@@ -17,7 +17,8 @@ app.addCommand("servers", false, function (steamID, name, args) {
 	var text = "Servers:";
 
 	for (var i in Config.servers) {
-		text = text + "\n    " + i + ". " + Config.servers[i].name;
+		var online = ((app.Socks[i] && app.Socks[i].writable) ? "Online" : "Offline");
+		text = text + "\n    " + i + ". " + Config.servers[i] + " [" + online + "]";
 	};
 
 	app.sendMessage(steamID, text);
@@ -93,25 +94,28 @@ app.addCommand("select", false, function (steamID, name, args) {
 
 	for (var i in args) {
 		if (args[i] == "*") {
+			selectWork = [];
+
 			for (var k in Config.servers) {
-				selectWork.push(k);
+				selectWork.push(Number(k));
 			}
+
 			break;
 		}
 
 		var id = Number(args[i]);
 
 		if (!isNaN(args[i]) && id >= 0 && Config.servers[id]) {
-			selectWork[id] = true;
+			selectWork.push(id);
 		}
 	}
 
 	if (selectWork.length > 0) {
-		if (selectWork.length != Config.servers.length) {
+		if (selectWork.length != Object.keys(Config.servers).length) {
 			var text = "You have selected server ";
 
 			for (var i in selectWork) {
-				text = text + i;
+				text = text + selectWork[i];
 				if (Number(i) + 1 != selectWork.length) {
 					text = text + ", ";
 				}
@@ -126,7 +130,7 @@ app.addCommand("select", false, function (steamID, name, args) {
 			app.logger.info(name + " [" + steamID + "] selected all servers.");
 		}
 	} else {
-		app.sendMessage(steamID, "The server(s) you have selected couldn't be found.");
+		app.sendMessage(steamID, "The server(s) you selected could not be found.");
 		app.logger.debug(name + " [" + steamID + "] failed to properly select a server.");
 		return;
 	}
@@ -166,7 +170,8 @@ app.addCommand("chat", false, function (steamID, name, args, strArgs) {
 				message: strArgs
 			}
 			for (var i in app.Selected[steamID]) {
-				func.sendToServer(i, "OnChat", data);
+				var serverID = app.Selected[steamID][i];
+				func.sendToServer(serverID, "OnChat", data);
 			}
 			app.logger.info(name + " [" + steamID + "] -> Server Chat : " + strArgs);
 		}
@@ -183,7 +188,8 @@ app.addCommand("announce", false, function (steamID, name, args, strArgs) {
 			}
 
 			for (var i in app.Selected[steamID]) {
-				func.sendToServer(i, "OnAnnounce", data);
+				var serverID = app.Selected[steamID][i];
+				func.sendToServer(serverID, "OnAnnounce", data);
 			}
 			app.logger.info(name + " [" + steamID + "] -> Server Announcement : " + strArgs);
 		}
@@ -199,7 +205,8 @@ app.addCommand("players", false, function (steamID, name, args) {
 		}
 
 		for (var i in app.Selected[steamID]) {
-			func.sendToServer(i, "GetPlayers", data);
+			var serverID = app.Selected[steamID][i];
+			func.sendToServer(serverID, "GetPlayers", data);
 		}
 		app.logger.info(name + " [" + steamID + "] is requesting the list of players.");
 	} else {
@@ -216,7 +223,8 @@ app.addCommand("rcon", true, function (steamID, name, args, strArgs) {
 			}
 
 			for (var i in app.Selected[steamID]) {
-				func.sendToServer(i, "OnRCON", data);
+				var serverID = app.Selected[steamID][i];
+				func.sendToServer(serverID, "OnRCON", data);
 			}
 		}
 		app.logger.info(name + " [" + steamID + "] -> RCON : " + strArgs);
@@ -247,7 +255,8 @@ app.addCommand("kick", false, function (steamID, name, args) {
 		}
 
 		for (var i in app.Selected[steamID]) {
-			func.sendToServer(i, "OnKick", data);
+			var serverID = app.Selected[steamID][i];
+			func.sendToServer(serverID, "OnKick", data);
 		}
 		app.logger.info(name + " [" + steamID + "] is trying to kick " + args[0] + " for " + reason);
 	} else {
@@ -283,7 +292,8 @@ app.addCommand("kickid", false, function (steamID, name, args) {
 		}
 
 		for (var i in app.Selected[steamID]) {
-			func.sendToServer(i, "OnKickID", data);
+			var serverID = app.Selected[steamID][i];
+			func.sendToServer(serverID, "OnKickID", data);
 		}
 	} else {
 		app.sendMessage(steamID, "You need to select a server first!");
@@ -327,7 +337,8 @@ app.addCommand("ban", false, function (steamID, name, args) {
 		}
 
 		for (var i in app.Selected[steamID]) {
-			func.sendToServer(i, "OnBan", data);
+			var serverID = app.Selected[steamID][i];
+			func.sendToServer(serverID, "OnBan", data);
 		}
 		app.logger.info(name + " [" + steamID + "] is trying to ban " + args[0] + " for " + time + " minutes for " + reason);
 	} else {
@@ -371,7 +382,8 @@ app.addCommand("banid", false, function (steamID, name, args) {
 		}
 
 		for (var i in app.Selected[steamID]) {
-			func.sendToServer(i, "OnBanID", data);
+			var serverID = app.Selected[steamID][i];
+			func.sendToServer(serverID, "OnBanID", data);
 		}
 		app.logger.info(name + " [" + steamID + "] is trying to banid " + args[0] + " for " + time + " minutes for " + reason);
 	} else {
@@ -393,7 +405,8 @@ app.addCommand("unban", false, function (steamID, name, args) {
 		}
 
 		for (var i in app.Selected[steamID]) {
-			func.sendToServer(i, "OnUnban", data);
+			var serverID = app.Selected[steamID][i];
+			func.sendToServer(serverID, "OnUnban", data);
 		}
 		app.logger.info(name + " [" + steamID + "] is trying to unban " + args[0]);
 	} else {

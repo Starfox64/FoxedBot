@@ -1,11 +1,17 @@
 {
   "name": "foxedbot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A SteamBot for Garry's Mod.",
   "main": "./app.js",
+  "scripts": {
+  	"start": "node app.js"
+  },
   "repository": {
-  	"type": "svn",
-  	"url": "https://github.com/Starfox64/FoxedBot/trunk/foxedbot.js"
+  	"type": "git",
+  	"url": "https://github.com/Starfox64/FoxedBot"
+  },
+  "bugs": {
+    "url": "https://github.com/Starfox64/FoxedBot/issues"
   },
   "private": true,
   "dependencies": {
@@ -21,5 +27,5 @@
   ],
   "homepage": "https://github.com/Starfox64/FoxedBot",
   "author": "_FR_Starfox64 <louisdijon21@yahoo.fr>",
-  "license": "GNU-GPL v2"
+  "license": "GPL-2.0"
 }

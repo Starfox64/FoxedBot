@@ -10,7 +10,7 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
   
 **Requirements**  
 >- [Node.js][3] (**>= 0.12.0**)
->- SVN (Windows: [SlikSVN][5] [**Nothing Else**]) (Linux: Get the **svn** or **subversion** package)
+>- SVN (Windows: [SlikSVN][5] [**Not TurtoiseSVN**]) (Linux: Get the **svn** or **subversion** package)
 >- [gm_bromsock][6]
 >- Windows: [Visual C++ Redistributable Packages for Visual Studio 2013][9]
 
@@ -40,9 +40,6 @@ npm install --unsafe-perm
 >- Add your server to the SteamBot's configuration file if you haven't already
   
 **Note:** Make sure to update your firewall's access rules!  
-**Tip:** The ServerPort variable isn't the source engine port (27015), it is a specific port that will receive messages from the SteamBot.  
-2510X where X is the ServerID is a good way to avoid having the same port on two different servers.  
-**Tip:** You can get the ServerID of a server with it's order in the bot's configuration file. The first one is 0, second one is 1 and so on...
 
 # Usage
 Starting-up FoxedBot
@@ -60,11 +57,11 @@ Adding and removing users
 -------------------------
 Before you brainlessly use the **adduser** command you need to be aware of this: as your bot is an "empty" Steam account it most likely won't be able to send friend requests. To add someone the person needs to send a friend request to the bot before you use the command adduser:
 ```
-!adduser <SteamID64>
-!deluser <SteamID64>
+adduser <SteamID64>
+deluser <SteamID64>
 ```
   
-**Note:** Whenever the SteamBot crashes you'll need to run the **foxedbot_reload** command in order to reload the sockets.
+**Note:** If a server is having troubles connecting to the SteamBot run **foxedbot_reload** in the server console to attempt to fix it.
 
 FoxedBot Commands
 -----------------
@@ -130,7 +127,8 @@ app.addCommand("chat", false, function (steamID, name, args, strArgs) {
 				message: strArgs
 			}
 			for (var i in selected[steamID]) { // Calls the OnChat callback on all selected servers
-				func.sendToServer(i, "OnChat", data);
+				var serverID = app.Selected[steamID][i];
+				func.sendToServer(serverID, "OnChat", data);
 			}
 		}
 	} else {
@@ -212,7 +210,8 @@ Credits
 **seishun** - node-steam  
 **_FR_Starfox64** - FoxedBot  
 **Metamist** - Node.js Consultant ;)  
-**bromvlieg** - gm_bromsock
+**bromvlieg** - gm_bromsock  
+**Dragoboss** - SteamGuard Sentry Hash
 
 [1]:https://github.com/seishun "seishun"
 [2]:https://github.com/seishun/node-steam "node-steam"

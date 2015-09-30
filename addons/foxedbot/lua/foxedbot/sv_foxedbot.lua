@@ -4,59 +4,89 @@ util.AddNetworkString("FoxedBot_Announce")
 
 FoxedBot.callbacks = {}
 FoxedBot.sock = BromSock()
-FoxedBot.client = BromSock()
-FoxedBot.client:SetCallbackSend(function() end) -- Sets the client socket to non-blocking
+FoxedBot.retries = 0
+FoxedBot.ready = false
+
+FoxedBot.sock:Create()
+FoxedBot.sock:SetOption(0xFFFF, 0x0008, 1)
 
 --[[
-	This callback is called whenever a TCP packet is received on port <FoxedBot.ServerPort>.
-	It also makes sure that the packet is coming from the SteamBot.
+	Sends the ServerKey and ServerID to the bot to authenticate the server.
 ]]--
-FoxedBot.sock:SetCallbackAccept(function( serversock, clientsock )
-	if clientsock:GetIP() == FoxedBot.BotIP then
-		clientsock:SetCallbackReceive(function( sockObj, packet )
-			local msg = packet:ReadStringAll()
+function FoxedBot.auth( sockObj, succ, ip, port )
+	if succ then
+		local authData = {"AUTH", FoxedBot.ServerKey, FoxedBot.ServerID}
+		authData = util.TableToJSON(authData)
 
-			if msg then
-				local args = util.JSONToTable(msg)
+		local packet = BromPacket()
+		packet:WriteStringRaw(authData)
 
-				if args then
-					local serverKey = args[1] or "unknown"
-					local callback = args[2] or "unknown"
-					local data = args[3] or {}
-
-					if serverKey == FoxedBot.ServerKey then
-						if FoxedBot.callbacks[callback] then
-							FoxedBot.callbacks[callback](data)
-						else
-							MsgC(Color(200, 25, 25), "[FoxedBot] Attempted to call an unknown callback! ("..callback..")\n")
-						end
-					else
-						MsgC(Color(200, 25, 25), "[FoxedBot] Received a packet containing the wrong ServerKey.\n")
-					end
-				else
-					MsgC(Color(200, 25, 25), "[FoxedBot] Received an invalid packet.\n")
-				end
-			end
-
-			clientsock:Receive()
-		end)
-
-		clientsock:Receive()
-	end
-
-	FoxedBot.sock:Accept()
-end)
-
-function FoxedBot.listen()
-	if FoxedBot.sock:Listen(FoxedBot.ServerPort) then
-		MsgC(Color(25, 200, 25), "[FoxedBot] Listening on port "..FoxedBot.ServerPort..".\n")
-		FoxedBot.sock:Accept()
+		FoxedBot.sock:Send(packet, true)
+		FoxedBot.sock:ReceiveUntil("\3") -- Reads until the EndOfText control character.
 	else
-		MsgC(Color(200, 25, 25), "[FoxedBot] Failed to listen on port "..FoxedBot.ServerPort..".\n")
+		MsgC(Color(200, 25, 25), "[FoxedBot] Connection Failed, retrying in 30 seconds...\n")
+
+		timer.Simple(30, function()
+			FoxedBot.sock:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
+		end)
 	end
 end
 
-FoxedBot.listen()
+FoxedBot.sock:SetCallbackConnect(FoxedBot.auth)
+
+FoxedBot.sock:SetCallbackReceive(function( sockObj, packet )
+	local msg = packet:ReadStringAll()
+	msg = string.sub(msg, 1, -2) -- Removes the EndOfText control character.
+
+	if msg then
+		local args = util.JSONToTable(msg)
+
+		if args then
+			local callback = args[1] or "unknown"
+			local data = args[2] or {}
+
+			if callback == "SYS" then -- Internal callback used for authentication.
+				if data == "AUTHED" then
+					FoxedBot.ready = true
+					FoxedBot.retries = 0 -- Reset retries counter.
+
+					MsgC(Color(25, 200, 25), "[FoxedBot] Connected to FoxedBot.\n")
+				elseif data == "DENIED" then
+					FoxedBot.ready = false
+
+					if (FoxedBot.retries < 2) then
+						MsgC(Color(200, 25, 25), "[FoxedBot] Connection Denied, retrying...\n")
+						FoxedBot.auth(nil, true) -- resend the auth data to the bot.
+					else
+						MsgC(Color(200, 25, 25), "[FoxedBot] Connection Denied, out of retries, your ServerKey is most likely wrong!\n")
+						FoxedBot.sock:Disconnect()
+					end
+
+					return
+				end
+			elseif FoxedBot.callbacks[callback] then
+				FoxedBot.callbacks[callback](data)
+			else
+				MsgC(Color(200, 25, 25), "[FoxedBot] Attempted to call an unknown callback! ("..callback..")\n")
+			end
+		else
+			MsgC(Color(200, 25, 25), "[FoxedBot] Received an invalid packet.\n")
+		end
+	end
+
+	FoxedBot.sock:ReceiveUntil("\3")
+end)
+
+FoxedBot.sock:SetCallbackDisconnect(function()
+	MsgC(Color(200, 25, 25), "[FoxedBot] Disconnected!\n")
+	if FoxedBot.ready then
+		FoxedBot.ready = false
+		FoxedBot.sock:Disconnect()
+		FoxedBot.sock:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
+	end
+end)
+
+FoxedBot.sock:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
 
 --[[
 	Adds a callback to the callbacks list.
@@ -93,8 +123,6 @@ function FoxedBot.sendEvent( name, data )
 	end
 
 	local tbl = {
-		FoxedBot.ServerKey,
-		FoxedBot.ServerID,
 		"Event",
 		name,
 		data
@@ -104,19 +132,8 @@ function FoxedBot.sendEvent( name, data )
 	local packet = BromPacket()
 	packet:WriteStringRaw(toSend)
 
-	FoxedBot.client:SetCallbackConnect(function( sockObj, ret, ip, port )
-		if not ret then
-			MsgC(Color(25, 200, 25), "[FoxedBot] Failed to connect to the SteamBot.\n")
-			return
-		end
-		
-		FoxedBot.client:Send(packet)
-	end)
-
-	if FoxedBot.client:GetState() != 7 then
-		FoxedBot.client:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
-	else
-		FoxedBot.client:Send(packet)
+	if FoxedBot.sock:GetState() == 7 and FoxedBot.ready then
+		FoxedBot.sock:Send(packet, true)
 	end
 end
 
@@ -131,8 +148,6 @@ function FoxedBot.sendMessage( steamID, message )
 	end
 
 	local tbl = {
-		FoxedBot.ServerKey,
-		FoxedBot.ServerID,
 		"Message",
 		steamID,
 		message
@@ -142,19 +157,8 @@ function FoxedBot.sendMessage( steamID, message )
 	local packet = BromPacket()
 	packet:WriteStringRaw(toSend)
 
-	FoxedBot.client:SetCallbackConnect(function( sockObj, ret, ip, port )
-		if not ret then
-			MsgC(Color(25, 200, 25), "[FoxedBot] Failed to connect to the SteamBot.\n")
-			return
-		end
-		
-		FoxedBot.client:Send(packet)
-	end)
-
-	if FoxedBot.client:GetState() != 7 then
-		FoxedBot.client:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
-	else
-		FoxedBot.client:Send(packet)
+	if FoxedBot.sock:GetState() == 7 and FoxedBot.ready then
+		FoxedBot.sock:Send(packet, true)
 	end
 end
 
@@ -172,7 +176,7 @@ function FoxedBot.findPlayer( name )
 end
 
 --[[
-	Server only command that disconnects all sockets and forces the server to listen again.
+	Server only command that forces the server to reconnect to FoxedBot.
 ]]--
 concommand.Add("foxedbot_reload", function ( ply )
 	if IsValid(ply) and not ply:IsListenServerHost() and not game.SinglePlayer() then
@@ -180,9 +184,12 @@ concommand.Add("foxedbot_reload", function ( ply )
 		return
 	end
 
-	MsgC(Color(251, 184, 41), "[FoxedBot] Reloading sockets...\n")
+	MsgC(Color(251, 184, 41), "[FoxedBot] Reloading connection...\n")
 
 	FoxedBot.sock:Disconnect()
-	FoxedBot.client:Disconnect()
-	FoxedBot.listen()
+	FoxedBot.sock:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
+end)
+
+hook.Add("ShutDown", "FoxedBot_Disconnect", function()
+	FoxedBot.sock:Disconnect()
 end)

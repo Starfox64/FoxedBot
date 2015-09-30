@@ -33,23 +33,9 @@ module.exports = {
 	],
 
 	/* Your Garry's Mod servers */
-	servers: [
-		{ // ServerID: 0
-			name: "My Server #1",
-			ip: "127.0.0.1",
-			port: 25100
-		},
-
-		{ // ServerID: 1
-			name: "My Server #2",
-			ip: "127.0.0.1",
-			port: 25101
-		},
-
-		{ // ServerID: 2
-			name: "My Server #3",
-			ip: "127.0.0.1",
-			port: 25102
-		}
-	]
+	servers: {
+		"1": "My Server #1",
+		"2": "My Server #2",
+		"3": "My Server #3"
+	}
 };

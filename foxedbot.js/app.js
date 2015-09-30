@@ -41,6 +41,7 @@ app.logger = log4js.getLogger("LOG");
 app.logger.setLevel(Config.logLevel);
 app.server = net.createServer();
 app.Steam = Steam;
+app.Socks = {};
 app.Commands = {};
 app.Selected = {};
 app.Listening = {};
@@ -197,7 +198,7 @@ app.bot.on("friendMsg", function (source, message) {
 			}
 
 			app.sendMessage(source, "Command not found.");
-			app.logger.debug(name + " [" + source + "] tried to run an unknown command. (" + message.toLowerCase().substring(1, length) + ")");
+			app.logger.debug(name + " [" + source + "] tried to run an unknown command.");
 		}
 
 		return;
@@ -227,32 +228,64 @@ app.server.on("listening", function () {
 
 app.server.on("connection", function (sock) {
 	sock.on("data", function (packet) {
-		var data;
-
 		try {
-			if (packet.toString()[0] != "{") {
-				data = JSON.parse(packet.toString().substring(4)); // Removes the 4 first characters if the first one isn't '{'
-			} else {
-				data = JSON.parse(packet.toString());
-			}
+			var data = JSON.parse(packet.toString());
 		} catch (e) {
 			app.logger.warn(sock.remoteAddress + " send an invalid JSON packet!");
+			return;
 		}
 
-		if (data) {
-			if (data["1"] == Config.serverKey) {
-				if (data["3"] == "Event") {
-					if (app.eventEmitter.listeners(data["4"]).length > 0) {
-						app.eventEmitter.emit(data["4"], data["2"], data["5"])
-					} else {
-						app.logger.warn(sock.remoteAddress + " tried to trigger an unknown event! (" + data["4"] + ")");
-					}
+		if (isNaN(sock.serverID)) {
+			if (data[1] === "AUTH") {
+				if (data[2] === Config.serverKey) {
+					sock.serverID = data[3];
+					app.Socks[sock.serverID] = sock;
+					app.logger.info("Server " + sock.serverID + " has been authenticated!");
+					func.sendToSocket(sock, JSON.stringify(["SYS", "AUTHED"]));
+
+					return;
 				} else {
-					app.sendMessage(data["4"], data["5"]);
+					app.logger.warn(sock.remoteAddress + " provided the wrong ServerKey!");
 				}
 			} else {
-				app.logger.warn(sock.remoteAddress + " tried to connect with the wrong ServerKey!");
+				app.logger.warn(sock.remoteAddress + " is sending data and is not authenticated!");
+			}
+
+			func.sendToSocket(sock, JSON.stringify(["SYS", "DENIED"]));
+		} else {
+			if (data[1] === "Event") {
+				if (app.eventEmitter.listeners(data[2]).length > 0) {
+					app.eventEmitter.emit(data[2], sock.serverID, data[3])
+				} else {
+					app.logger.warn(sock.remoteAddress + " tried to trigger an unknown event! (" + data[2] + ")");
+				}
+			} else {
+				app.sendMessage(data[3], data[4]);
 			}
 		}
 	});
+
+	sock.on("end", function () {
+		if (sock.serverID) {
+			app.logger.info("Server " + sock.serverID + " disconnected.");
+			delete app.Socks[sock.serverID];
+		} else {
+			app.logger.info("Socket " + sock.remoteAddress + " disconnected.");
+		}
+
+		sock.destroy();
+	});
+
+	sock.on("error", function (err) {
+		if (sock.serverID) {
+			app.logger.error("Server " + sock.serverID + " error: " + err.code);
+			delete app.Socks[sock.serverID];
+		} else {
+			app.logger.error("Socket " + sock.remoteAddress + " error: " + err.code);
+		}
+
+		sock.destroy();
+	});
+
+	sock.setKeepAlive(true, 0);
 });
