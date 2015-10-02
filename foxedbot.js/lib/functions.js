@@ -1,5 +1,4 @@
 var fs = require("fs");
-var net = require("net");
 var Config = require("../config/settings.js");
 var app = require("../app.js");
 

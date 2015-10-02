@@ -8,7 +8,7 @@ FoxedBot.retries = 0
 FoxedBot.ready = false
 
 FoxedBot.sock:Create()
-FoxedBot.sock:SetOption(0xFFFF, 0x0008, 1)
+FoxedBot.sock:SetOption(0xFFFF, 0x0008, 1) -- Enable keepalive
 
 --[[
 	Sends the ServerKey and ServerID to the bot to authenticate the server.
@@ -24,7 +24,7 @@ function FoxedBot.auth( sockObj, succ, ip, port )
 		FoxedBot.sock:Send(packet, true)
 		FoxedBot.sock:ReceiveUntil("\3") -- Reads until the EndOfText control character.
 	else
-		MsgC(Color(200, 25, 25), "[FoxedBot] Connection Failed, retrying in 30 seconds...\n")
+		MsgC(Color(200, 70, 70), "[FoxedBot] Connection Failed, retrying in 30 seconds...\n")
 
 		timer.Simple(30, function()
 			FoxedBot.sock:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
@@ -55,10 +55,11 @@ FoxedBot.sock:SetCallbackReceive(function( sockObj, packet )
 					FoxedBot.ready = false
 
 					if (FoxedBot.retries < 2) then
-						MsgC(Color(200, 25, 25), "[FoxedBot] Connection Denied, retrying...\n")
+						MsgC(Color(200, 70, 70), "[FoxedBot] Connection Denied, retrying...\n")
+						FoxedBot.retries = FoxedBot.retries + 1
 						FoxedBot.auth(nil, true) -- resend the auth data to the bot.
 					else
-						MsgC(Color(200, 25, 25), "[FoxedBot] Connection Denied, out of retries, your ServerKey is most likely wrong!\n")
+						MsgC(Color(200, 70, 70), "[FoxedBot] Connection Denied after 3 attempts, ServerKey or ServerID is most likely wrong!\n")
 						FoxedBot.sock:Disconnect()
 					end
 
@@ -67,10 +68,10 @@ FoxedBot.sock:SetCallbackReceive(function( sockObj, packet )
 			elseif FoxedBot.callbacks[callback] then
 				FoxedBot.callbacks[callback](data)
 			else
-				MsgC(Color(200, 25, 25), "[FoxedBot] Attempted to call an unknown callback! ("..callback..")\n")
+				MsgC(Color(200, 70, 70), "[FoxedBot] Attempted to call an unknown callback! ("..callback..")\n")
 			end
 		else
-			MsgC(Color(200, 25, 25), "[FoxedBot] Received an invalid packet.\n")
+			MsgC(Color(200, 70, 70), "[FoxedBot] Received an invalid packet.\n")
 		end
 	end
 
@@ -78,11 +79,15 @@ FoxedBot.sock:SetCallbackReceive(function( sockObj, packet )
 end)
 
 FoxedBot.sock:SetCallbackDisconnect(function()
-	MsgC(Color(200, 25, 25), "[FoxedBot] Disconnected!\n")
+	MsgC(Color(200, 70, 70), "[FoxedBot] Disconnected!\n")
+
 	if FoxedBot.ready then
 		FoxedBot.ready = false
 		FoxedBot.sock:Disconnect()
-		FoxedBot.sock:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
+
+		timer.Simple(5, function()
+			FoxedBot.sock:Connect(FoxedBot.BotIP, FoxedBot.BotPort)
+		end)
 	end
 end)
 
@@ -191,5 +196,7 @@ concommand.Add("foxedbot_reload", function ( ply )
 end)
 
 hook.Add("ShutDown", "FoxedBot_Disconnect", function()
-	FoxedBot.sock:Disconnect()
+	if FoxedBot.sock:GetState() == 7 then
+		FoxedBot.sock:Disconnect()
+	end
 end)

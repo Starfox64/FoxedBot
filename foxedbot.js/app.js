@@ -231,19 +231,23 @@ app.server.on("connection", function (sock) {
 		try {
 			var data = JSON.parse(packet.toString());
 		} catch (e) {
-			app.logger.warn(sock.remoteAddress + " send an invalid JSON packet!");
+			app.logger.warn(sock.remoteAddress + " sent an invalid JSON packet!");
 			return;
 		}
 
-		if (isNaN(sock.serverID)) {
+		if (isNaN(sock.serverID)) { // Checks if the socket is authenticated
 			if (data[1] === "AUTH") {
 				if (data[2] === Config.serverKey) {
-					sock.serverID = data[3];
-					app.Socks[sock.serverID] = sock;
-					app.logger.info("Server " + sock.serverID + " has been authenticated!");
-					func.sendToSocket(sock, JSON.stringify(["SYS", "AUTHED"]));
+					if (Config.servers[data[3]]) { // Checks if the provided serverID exists
+						sock.serverID = data[3];
+						app.Socks[sock.serverID] = sock;
+						app.logger.info("Server " + sock.serverID + " has been authenticated!");
+						func.sendToSocket(sock, JSON.stringify(["SYS", "AUTHED"]));
 
-					return;
+						return;
+					} else {
+						app.logger.warn(sock.remoteAddress + " provided an invalid ServerID!");
+					}
 				} else {
 					app.logger.warn(sock.remoteAddress + " provided the wrong ServerKey!");
 				}
