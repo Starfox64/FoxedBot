@@ -236,10 +236,10 @@ app.server.on("connection", function (sock) {
 		}
 
 		if (isNaN(sock.serverID)) { // Checks if the socket is authenticated
-			if (data[1] === "AUTH") {
-				if (data[2] === Config.serverKey) {
-					if (Config.servers[data[3]]) { // Checks if the provided serverID exists
-						sock.serverID = data[3];
+			if (data[0] === "AUTH") {
+				if (data[1] === Config.serverKey) {
+					if (Config.servers[data[2]]) { // Checks if the provided serverID exists
+						sock.serverID = data[2];
 						app.Socks[sock.serverID] = sock;
 						app.logger.info("Server " + sock.serverID + " has been authenticated!");
 						func.sendToSocket(sock, JSON.stringify(["SYS", "AUTHED"]));
@@ -257,14 +257,14 @@ app.server.on("connection", function (sock) {
 
 			func.sendToSocket(sock, JSON.stringify(["SYS", "DENIED"]));
 		} else {
-			if (data[1] === "Event") {
-				if (app.eventEmitter.listeners(data[2]).length > 0) {
-					app.eventEmitter.emit(data[2], sock.serverID, data[3])
+			if (data[0] === "Event") {
+				if (app.eventEmitter.listeners(data[1]).length > 0) {
+					app.eventEmitter.emit(data[1], sock.serverID, data[2])
 				} else {
-					app.logger.warn(sock.remoteAddress + " tried to trigger an unknown event! (" + data[2] + ")");
+					app.logger.warn(sock.remoteAddress + " tried to trigger an unknown event! (" + data[1] + ")");
 				}
 			} else {
-				app.sendMessage(data[3], data[4]);
+				app.sendMessage(data[2], data[3]);
 			}
 		}
 	});
