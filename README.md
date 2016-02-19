@@ -15,7 +15,7 @@ FoxedBot is a SteamBot using [seishun][1]'s [node-steam][2] designed to control 
 >- Windows: [Visual C++ Redistributable Packages for Visual Studio 2013][9]
 
 # FoxedBot Installation
-**Warning:** Do NOT install node-steam manually unless you know what you are doing, the FoxedBot package will install it automatically. please review the result of `npm install` to make sure that the command was actually successful.
+**Warning:** Do NOT install node-steam manually unless you know what you are doing, the FoxedBot package will install it automatically. Please review the result of `npm install` to make sure that the command was actually successful.
 
 > **SteamBot**
 >- Create a new Steam account for the SteamBot
