@@ -1,6 +1,6 @@
 {
   "name": "foxedbot",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A SteamBot for Garry's Mod.",
   "main": "./app.js",
   "repository": {

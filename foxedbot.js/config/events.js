@@ -4,7 +4,7 @@ var events = app.eventEmitter;
 events.on("OnChat", function (serverID, data) {
 	for (var i in app.Listening) {
 		if (app.Listening[i]) {
-			if (app.Selected[i] && app.Selected[i][serverID]) {
+			if (app.Selected[i] && app.Selected[i].indexOf(serverID) != -1) {
 				app.sendMessage(i, "[" + serverID + "] " + data.name + ": " + data.text);
 			}
 		}
@@ -15,7 +15,7 @@ events.on("OnChat", function (serverID, data) {
 events.on("OnLog", function (serverID, data) {
 	for (var i in app.Listening) {
 		if (app.Listening[i]) {
-			if (app.Selected[i] && app.Selected[i][serverID]) {
+			if (app.Selected[i] && app.Selected[i].indexOf(serverID) != -1) {
 				app.sendMessage(i, "[" + serverID + "] " + data.text);
 			}
 		}
