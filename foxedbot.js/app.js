@@ -264,7 +264,7 @@ app.server.on("connection", function (sock) {
 					app.logger.warn(sock.remoteAddress + " tried to trigger an unknown event! (" + data[1] + ")");
 				}
 			} else {
-				app.sendMessage(data[2], data[3]);
+				app.sendMessage(data[1], data[2]);
 			}
 		}
 	});
