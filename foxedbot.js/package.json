@@ -1,6 +1,6 @@
 {
   "name": "foxedbot",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "A SteamBot for Garry's Mod.",
   "main": "./app.js",
   "repository": {
@@ -14,6 +14,9 @@
   "dependencies": {
     "steam": "0.6.8",
     "log4js": "0.6.22"
+  },
+  "scripts": {
+    "postinstall": "npm install protobufjs@5.0.1"
   },
   "engines": {
     "node": ">=4.1.0"
